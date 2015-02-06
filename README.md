@@ -2,10 +2,11 @@
     $ pip install virtualenvwrapper  
 
 Add the following to your .bashrc/.zshrc  
-    export WORKON_HOME=$HOME/.virtualenvs  
-    export PROJECT_HOME=$HOME/Devel  
-    source /usr/local/bin/virtualenvwrapper.sh  
-
+```
+export WORKON_HOME=$HOME/.virtualenvs  
+export PROJECT_HOME=$HOME/Devel  
+source /usr/local/bin/virtualenvwrapper.sh  
+```
 Create a directory for the project and a new virtual environment  
     $ mkdir 402project && cd 402project   
     $ mkvirtualenv  402project  
