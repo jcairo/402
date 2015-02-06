@@ -1,7 +1,7 @@
 #### Installation  
     $ pip install virtualenvwrapper  
 
-Add the following to your .bashrc/.zshrc etc...  
+Add the following to your .bashrc/.zshrc  
     export WORKON_HOME=$HOME/.virtualenvs  
     export PROJECT_HOME=$HOME/Devel  
     source /usr/local/bin/virtualenvwrapper.sh  
