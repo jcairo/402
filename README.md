@@ -1,5 +1,5 @@
 #### Installation  
-$ pip install virtualenvwrapper  
+    $ pip install virtualenvwrapper  
 
 Add the following to your .bashrc/.zshrc etc...  
 export WORKON_HOME=$HOME/.virtualenvs  
