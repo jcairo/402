@@ -28,16 +28,30 @@ class AuthorQuery(object):
     >>> type(author_query) is AuthorQuery
     True
     """
-    def __init__(self, author_name, author_description=None):
+    def __init__(self, author_name, author_description=None, labels=None):
         query_dict = OrderedDict()
         if author_description:
             query_dict['mauthors'] = author_name + ' ' + author_description
         else:
             query_dict['mauthors'] = author_name
+
+        if labels is not None:
+            formatted_labels = self.format_labels(labels)
+            query_dict['mauthors'] += formatted_labels
+
         query_dict['hl'] = 'en'
         query_dict['view_op'] = 'search_authors'
         self.query_URL = self.get_url(query_dict)
         self.search_results = self.search(self.query_URL)
+
+    def format_labels(self, labels):
+        """
+        Return labels formatted for url
+        """
+        formatted_labels = ""
+        for label in labels:
+            formatted_labels += ' label:' + label.replace(' ', '_')
+        return formatted_labels
 
     def get_url(self, query_dict):
         """
