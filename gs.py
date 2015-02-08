@@ -127,6 +127,8 @@ class AuthorQueryResponseParser(object):
         return parsed_results
 
     def parse_name(self, author_div):
+        # name format varies. sometimes the last name is in a span,
+        # other times both the first and last are in the same tag.
         name_h3 = author_div.find(class_='gsc_1usr_name')
         try:
             first_name = unicode(name_h3.a.string)
@@ -136,7 +138,7 @@ class AuthorQueryResponseParser(object):
         try:
             last_name = unicode(name_h3.a.span.string)
         except AttributeError:
-            print "Couldn't parse last name."
+            print "Last name in unexpected position."
             last_name = ''
         return first_name + last_name
 

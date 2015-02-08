@@ -28,8 +28,8 @@ class TestAuthorQuery:
     def test_result_size(self):
         # retrieve locally stored copy of search for 'A Einstein label:Physics'
         html_file = open('test_data/einstein_search.html', 'r')
-        parsed_results = gs.AuthorQueryResponseParser(html_file).results
-
+        author_query_results = gs.AuthorQueryResponseParser(html_file).results
+        assert len(author_query_results) == 3
 
 class TestAuthor:
     """
