@@ -18,15 +18,29 @@ class Config(object):
 class AuthorQuery(object):
     """
     Represents a query based on the author name and description.
-    Pass an author name and optionally a  description string.
-    The string should be either the domain name of the university or the name of the university.
+    Pass an author name and optionally a description string and optionally 
+    a list of labels.
+    The description string should be either the domain name of the 
+    university or the name of the university.
     If no description information is known, pass only an author name.
-    >>> author_query = AuthorQuery('A Einstein', 'princeton.edu')
+    >>> author_query = AuthorQuery('A Einstein', description='princeton.edu')
     >>> type(author_query) is AuthorQuery
     True
     >>> author_query = AuthorQuery('A Einstein')
     >>> type(author_query) is AuthorQuery
     True
+    >>> author_query = AuthorQuery('A Einstein', labels=['Physics'])
+    >>> type(author_query) is AuthorQuery
+    True
+    >>> author_query.query_URL == 'https://scholar.google.ca/citations?mauthors=A+Einstein+label%3APhysics&hl=en&view_op=search_authors'
+    True
+    >>> search_results = author_query.search()
+    >>> search_results.get_first_result_url()
+    'https://scholar.google.ca/citations?user=qc6CJjYAAAAJ&hl=en'
+    >>> search_results.get_nth_result_url(2)
+    'https://scholar.google.ca/citations?user=H5JpaNUAAAAJ&hl=en'
+    >>> search_results.get_num_hits()
+    '3'
     """
     def __init__(self, author_name, author_description=None, labels=None):
         query_dict = OrderedDict()
@@ -42,11 +56,10 @@ class AuthorQuery(object):
         query_dict['hl'] = 'en'
         query_dict['view_op'] = 'search_authors'
         self.query_URL = self.get_url(query_dict)
-        self.search_results = self.search(self.query_URL)
 
     def format_labels(self, labels):
         """
-        Return labels formatted for url
+        Return labels formatted for url.
         """
         formatted_labels = ""
         for label in labels:
@@ -60,16 +73,19 @@ class AuthorQuery(object):
         query_URL = BASE_URL + CITATIONS_URL_EXTENSION + urlencode(query_dict)
         return query_URL
 
-    def search(self, url):
+    def search(self, url=None):
         """
         Return an array of authors found in the search
         """
-        # set user agent, GS blocks if not set
         header = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:27.0) Gecko/20100101 Firefox/27.0'}
-        response = requests.get(url, headers=header)
+        if url is None:
+            response = requests.get(self.query_URL, headers=header)
+        else:
+            response = requests.get(url, headers=header)
         if response.status_code != 200:
             raise requests.HTTPError
         query_resp_parser = AuthorQueryResponseParser(response.text)
+        self.search_results = query_resp_parser.results
         return query_resp_parser.results
 
     def get_first_result_url(self):
@@ -84,15 +100,17 @@ class AuthorQuery(object):
         """
         return self.search_results[index]['scholar_page']
 
+    def get_num_hits(self):
+        return self.search_results.length
+
 
 class AuthorQueryResponseParser(object):
     """
-    Parses the raw response of an AuthorQuery.
-    Receives HTML response from author search.
+    Parses the html payload of an author query.
     Returns an OrderedDict of authors found.
     """
-    def __init__(self, raw_search_results):
-        soup = BeautifulSoup(raw_search_results)
+    def __init__(self, payload):
+        soup = BeautifulSoup(payload)
         self.results = self.parse(soup)
 
     def parse(self, soup):
@@ -110,41 +128,89 @@ class AuthorQueryResponseParser(object):
 
     def parse_name(self, author_div):
         name_h3 = author_div.find(class_='gsc_1usr_name')
-        first_name = unicode(name_h3.a.string)
-        last_name = unicode(name_h3.a.span.string)
+        try:
+            first_name = unicode(name_h3.a.string)
+        except AttributeError:
+            print "Couldn't parse first name."
+            first_name = ''
+        try:
+            last_name = unicode(name_h3.a.span.string)
+        except AttributeError:
+            print "Couldn't parse last name."
+            last_name = ''
         return first_name + last_name
 
     def parse_author_link(self, author_div):
         link_h3 = author_div.find(class_='gsc_1usr_name')
-        link_suffix = unicode(link_h3.a['href'])
+        try:
+            link_suffix = unicode(link_h3.a['href'])
+        except AttributeError:
+            print "Couldn't parse author URL."
+            return ''
         return BASE_URL + link_suffix
 
     def parse_affiliation(self, author_div):
         affiliation_div = author_div.find(class_='gsc_1usr_aff')
-        affiliation = unicode(affiliation_div.string)
+        try:
+            affiliation = unicode(affiliation_div.string)
+        except AttributeError:
+            print "Couldn't parse author affiliation."
+            affiliation = ''
         return affiliation
 
     def parse_research_areas(self, author_div):
         research_areas_div = author_div.find(class_='gsc_1usr_int')
-        research_areas_a = research_areas_div.find_all('a')
+        try:
+            research_areas_a = research_areas_div.find_all('a')
+        except AttributeError:
+            print "Couldn't parse research areas."
+            return []
         research_areas = []
         for research_area_a in research_areas_a:
-            research_area = unicode(research_area_a.string)
+            try:
+                research_area = unicode(research_area_a.string)
+            except AttributeError as e:
+                print e
+                research_area = ''
+                continue
             research_areas.append(research_area)
         return research_areas
 
     def parse_email_domain(self, author_div):
         email_domain_div = author_div.find(class_='gsc_1usr_emlb')
-        email_domain = unicode(email_domain_div.string)
+        try:
+            email_domain = unicode(email_domain_div.string)
+        except AttributeError:
+            print "Couldn't parse author email."
+            email_domain = ''
         return email_domain
+
+
 
 class Author(object):
     """
     Represents an author
     """
     def __init__(self, author_url):
+
+        pass
+
+class AuthorParser(object):
+    """
+    Parses the html payload of an author page on GS.
+    """
+    def __init__(self, payload):
+        soup = BeautifulSoup(payload)
+        self.resulsts = self.parse(soup)
+
+
+
+class AuthorQueryError(Exception):
+    def __init__(self):
+        pass
+
+    def __str__(self):
         pass
 
 if __name__ == '__main__':
-    author_query = AuthorQuery('Victor Guana')
-    author = Author(author_query.first_result_URL)
+    pass
