@@ -30,6 +30,8 @@ class TestAuthorQuery:
         html_file = open('test_data/einstein_search.html', 'r')
         author_query_results = gs.AuthorQueryResponseParser(html_file).results
         assert len(author_query_results) == 3
+        assert author_query_results[0]['name'] == 'Albert Einstein'
+        assert author_query_results[0]['scholar_page'] == 'https://scholar.google.ca/citations?user=qc6CJjYAAAAJ&hl=en'
 
 class TestAuthor:
     """

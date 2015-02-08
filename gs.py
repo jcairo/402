@@ -140,7 +140,10 @@ class AuthorQueryResponseParser(object):
         except AttributeError:
             print "Last name in unexpected position."
             last_name = ''
-        return first_name + last_name
+        if first_name == last_name:
+            return first_name
+        else:
+            return first_name + last_name
 
     def parse_author_link(self, author_div):
         link_h3 = author_div.find(class_='gsc_1usr_name')
