@@ -30,6 +30,7 @@ class TestAuthorQuery:
         html_file = open('test_data/einstein_search.html', 'r')
         author_query_results = gs.AuthorQueryResponseParser(html_file).results
         assert len(author_query_results) == 3
+
         assert author_query_results[0]['name'] == 'Albert Einstein'
         assert author_query_results[0]['scholar_page'] == 'https://scholar.google.ca/citations?user=qc6CJjYAAAAJ&hl=en'
         assert author_query_results[0]['affiliation'] == 'Institute of Advanced Studies, Princeton'
@@ -41,6 +42,13 @@ class TestAuthorQuery:
         assert author_query_results[1]['affiliation'] == 'Junior Independent Researcher at the Albert Einstein Center for Fundamental Physics at the'
         assert author_query_results[1]['research_areas'] == ['Physics']
         assert author_query_results[1]['email_domain'] == '@lhep.unibe.ch'
+
+        assert author_query_results[2]['name'] == 'Deniz B Temel'
+        assert author_query_results[2]['scholar_page'] == 'https://scholar.google.ca/citations?user=H5JpaNUAAAAJ&hl=en'
+        assert author_query_results[2]['affiliation'] == 'Postdoctoral Fellow in Albert Einstein College of Medicine'
+        assert author_query_results[2]['research_areas'] == ['Biophysics', 'physics', 'biochemistry', 'structural biology', 'Nuclear magnetic resonance']
+        assert author_query_results[2]['email_domain'] == '@einstein.yu.edu'
+
 
 class TestAuthor:
     """
