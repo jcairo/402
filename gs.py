@@ -157,7 +157,7 @@ class AuthorQueryResponseParser(object):
     def parse_affiliation(self, author_div):
         affiliation_div = author_div.find(class_='gsc_1usr_aff')
         try:
-            affiliation = unicode(affiliation_div.string)
+            affiliation = unicode(affiliation_div.text)
         except AttributeError:
             print "Couldn't parse author affiliation."
             affiliation = ''

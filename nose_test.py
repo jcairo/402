@@ -32,6 +32,15 @@ class TestAuthorQuery:
         assert len(author_query_results) == 3
         assert author_query_results[0]['name'] == 'Albert Einstein'
         assert author_query_results[0]['scholar_page'] == 'https://scholar.google.ca/citations?user=qc6CJjYAAAAJ&hl=en'
+        assert author_query_results[0]['affiliation'] == 'Institute of Advanced Studies, Princeton'
+        assert author_query_results[0]['research_areas'] == ['Physics']
+        assert author_query_results[0]['email_domain'] == ''
+
+        assert author_query_results[1]['name'] == 'James Storey'
+        assert author_query_results[1]['scholar_page'] == 'https://scholar.google.ca/citations?user=b3I0YM8AAAAJ&hl=en'
+        assert author_query_results[1]['affiliation'] == 'Junior Independent Researcher at the Albert Einstein Center for Fundamental Physics at the'
+        assert author_query_results[1]['research_areas'] == ['Physics']
+        assert author_query_results[1]['email_domain'] == '@lhep.unibe.ch'
 
 class TestAuthor:
     """
