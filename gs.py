@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup
 from urllib import urlencode
+from urlparse import parse_qs, urlparse
 from collections import OrderedDict
 import requests
 
@@ -85,8 +86,8 @@ class AuthorQuery(object):
         if response.status_code != 200:
             raise requests.HTTPError
         query_resp_parser = AuthorQueryResponseParser(response.text)
-        self.search_results = query_resp_parser.results
-        return query_resp_parser.results
+        self.search_results = query_resp_parser.get_results()
+        return self.search_results
 
     def get_first_result_url(self):
         """
@@ -113,11 +114,14 @@ class AuthorQueryResponseParser(object):
         soup = BeautifulSoup(payload)
         self.results = self.parse(soup)
 
+    def get_results(self):
+        return self.results
+
     def parse(self, soup):
         parsed_results = []
         author_divs = soup.find_all(class_='gsc_1usr')
         for author_div in author_divs:
-            author = {}
+            author = OrderedDict()
             author['name'] = self.parse_name(author_div)
             author['scholar_page'] = self.parse_author_link(author_div)
             author['affiliation'] = self.parse_affiliation(author_div)
@@ -131,37 +135,29 @@ class AuthorQueryResponseParser(object):
         # other times both the first and last are in the same tag.
         name_h3 = author_div.find(class_='gsc_1usr_name')
         try:
-            first_name = unicode(name_h3.a.string)
+            name = unicode(name_h3.text)
+            return name
         except AttributeError:
-            print "Couldn't parse first name."
-            first_name = ''
-        try:
-            last_name = unicode(name_h3.a.span.string)
-        except AttributeError:
-            print "Last name in unexpected position."
-            last_name = ''
-        if first_name == last_name:
-            return first_name
-        else:
-            return first_name + last_name
+            print "Couldn't parse name"
+            return ''
 
     def parse_author_link(self, author_div):
         link_h3 = author_div.find(class_='gsc_1usr_name')
         try:
             link_suffix = unicode(link_h3.a['href'])
+            return BASE_URL + link_suffix
         except AttributeError:
             print "Couldn't parse author URL."
             return ''
-        return BASE_URL + link_suffix
 
     def parse_affiliation(self, author_div):
         affiliation_div = author_div.find(class_='gsc_1usr_aff')
         try:
             affiliation = unicode(affiliation_div.text)
+            return affiliation
         except AttributeError:
             print "Couldn't parse author affiliation."
-            affiliation = ''
-        return affiliation
+            return ''
 
     def parse_research_areas(self, author_div):
         research_areas_div = author_div.find(class_='gsc_1usr_int')
@@ -185,11 +181,10 @@ class AuthorQueryResponseParser(object):
         email_domain_div = author_div.find(class_='gsc_1usr_emlb')
         try:
             email_domain = unicode(email_domain_div.string)
+            return email_domain
         except AttributeError:
             print "Couldn't parse author email."
-            email_domain = ''
-        return email_domain
-
+            return ''
 
 
 class Author(object):
@@ -197,8 +192,9 @@ class Author(object):
     Represents an author
     """
     def __init__(self, author_url):
+        query_dict = OrderedDict()
+        self.author_url = author_url + '&cstart=0&pagesize=100'  # get first 100 articles
 
-        pass
 
 class AuthorParser(object):
     """
@@ -206,16 +202,100 @@ class AuthorParser(object):
     """
     def __init__(self, payload):
         soup = BeautifulSoup(payload)
-        self.resulsts = self.parse(soup)
+        self.result = self.parse(soup)
 
+    def get_result(self):
+        return self.result
 
+    def parse(self, soup):
+        author = OrderedDict()
+        author['author_name'] = self.parse_name(soup)
+        author['author_UID'] = self.parse_author_uid(soup)
+        author['article_UIDs'] = self.parse_article_uid(soup)
+        author['bio'] = self.parse_author_bio(soup)
+        author['research_interests'] = self.parse_author_research_interests(soup)
+        author['total_citations'] = self.parse_author_total_citations(soup)
+        author['co_authors'] = self.parse_co_authors(soup)
+        author['h_index'] = self.parse_h_index(soup)
+        author['i10_index'] = self.parse_i10_index(soup)
+        author['publications_by_year'] = self.parse_publications_by_year(soup)
+        author['author_image_URL'] = self.parse_author_image_URL(soup)
+        return author
 
-class AuthorQueryError(Exception):
-    def __init__(self):
+    def parse_name(self, soup):
+        name_div = soup.find(id='gsc_prf_in')
+        try:
+            name = name_div.text
+            return name
+        except AttributeError:
+            print "Couldn't parse name."
+            return ''
+
+    def parse_author_uid(self, soup):
+        try:
+            link_tag = soup.find(attrs={'rel': 'canonical'})
+            href = link_tag.get('href')
+            url_components = urlparse(href)
+            params = parse_qs(url_components.query)
+            uid = params['user'][0]
+            return uid
+        except AttributeError:
+            print "Couldn't parse author UID"
+            return ''
+
+    def parse_article_uid(self, soup):
         pass
 
-    def __str__(self):
+    def parse_author_bio(self, soup):
+        try:
+            bio_div = soup.find_all(class_='gsc_prf_il')[0]
+            bio = bio_div.text
+            print bio
+            return bio
+        except AttributeError:
+            print "Couldn't parse author bio."
+            return ''
+
+    def parse_author_research_interests(self, soup):
+        try:
+            interests_div = soup.find_all(class_='gsc_prf_il')[1]
+            interests = []
+            for a_tag in interests_div.find_all('a'):
+                interests.append(a_tag.text)
+            return interests
+        except AttributeError:
+            print "Couldn't parse interests."
+            return []
+
+    def parse_author_total_citations(self, soup):
+        try:
+            table = soup.find(id='gsc_rsb_st')
+            citations_row = table.find_all('tr')[1]
+            total_citations = citations_row.find_all('td')[1].text
+            return total_citations
+        except AttributeError:
+            print "Couldn't parse total citations."
+            return ''
+
+    def parse_co_authors(self, soup):
         pass
 
-if __name__ == '__main__':
-    pass
+    def parse_h_index(self, soup):
+        pass
+
+    def parse_i10_index(self, soup):
+        pass
+
+    def parse_publications_by_year(self, soup):
+        pass
+
+    def parse_author_image_URL(self, soup):
+        pass
+
+
+
+
+
+
+
+
