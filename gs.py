@@ -57,6 +57,7 @@ class AuthorQuery(object):
         query_dict['hl'] = 'en'
         query_dict['view_op'] = 'search_authors'
         self.query_URL = self.get_url(query_dict)
+        self.search(self.query_URL)
 
     def format_labels(self, labels):
         """
@@ -111,7 +112,7 @@ class AuthorQueryResponseParser(object):
     Returns an OrderedDict of authors found.
     """
     def __init__(self, payload):
-        soup = BeautifulSoup(payload)
+        soup = BeautifulSoup(payload, 'lxml')
         self.results = self.parse(soup)
 
     def get_results(self):
@@ -189,38 +190,50 @@ class AuthorQueryResponseParser(object):
 
 class Author(object):
     """
-    Represents an author
+    Represents an author.
+    Pass in an author page url on GS.
+    Get parsed information by calling Author.get_author_info()
     """
     def __init__(self, author_url):
-        query_dict = OrderedDict()
-        self.author_url = author_url + '&cstart=0&pagesize=100'  # get first 100 articles
+        self.author_dict = OrderedDict()
+        self.author_url = author_url + '&cstart=0&pagesize=100'
+        self.author_parser = AuthorParser(self.author_url, self.author_dict)
+        coauthors_url = author_parser.get_coathors_page_link()
+        self.coauthors_parser = CoAuthorsParser(coauthors_url, self.author_dict)
 
+    def get_author_info(self):
+        return self.author_dict
 
 class AuthorParser(object):
     """
     Parses the html payload of an author page on GS.
     """
-    def __init__(self, payload):
-        soup = BeautifulSoup(payload)
-        self.result = self.parse(soup)
+    def __init__(self, payload, author_dict):
+        soup = BeautifulSoup(payload, 'lxml')
+        self.result = self.parse(soup, author_dict)
 
     def get_result(self):
         return self.result
 
-    def parse(self, soup):
-        author = OrderedDict()
-        author['author_name'] = self.parse_name(soup)
-        author['author_UID'] = self.parse_author_uid(soup)
-        author['article_UIDs'] = self.parse_article_uid(soup)
-        author['bio'] = self.parse_author_bio(soup)
-        author['research_interests'] = self.parse_author_research_interests(soup)
-        author['total_citations'] = self.parse_author_total_citations(soup)
-        author['co_authors'] = self.parse_co_authors(soup)
-        author['h_index'] = self.parse_h_index(soup)
-        author['i10_index'] = self.parse_i10_index(soup)
-        author['publications_by_year'] = self.parse_publications_by_year(soup)
-        author['author_image_URL'] = self.parse_author_image_URL(soup)
-        return author
+    def parse(self, soup, author_dict):
+        author_dict['author_name'] = self.parse_name(soup)
+        author_dict['author_UID'] = self.parse_author_uid(soup)
+        author_dict['article_UIDs'] = self.parse_article_uid(soup)
+        author_dict['bio'] = self.parse_author_bio(soup)
+        author_dict['research_interests'] = self.parse_author_research_interests(soup)
+        author_dict['total_citations'] = self.parse_author_total_citations(soup)
+        author_dict['h_index'] = self.parse_h_index(soup)
+        author_dict['i10_index'] = self.parse_i10_index(soup)
+        author_dict['publications_by_year'] = self.parse_publications_by_year(soup)
+        author_dict['author_image_URL'] = self.parse_author_image_URL(soup)
+
+        # Coathors are listed on a seperate page.
+        # We use a seperate parser to scrape this page.
+        self.couauthors_page_link = self.parse_co_authors_page_link(soup)
+        return author_dict
+
+    def get_coathors_page_link(self):
+        return self.couauthors_page_link
 
     def parse_name(self, soup):
         name_div = soup.find(id='gsc_prf_in')
@@ -244,7 +257,24 @@ class AuthorParser(object):
             return ''
 
     def parse_article_uid(self, soup):
-        pass
+        article_uids = []
+        try:
+            article_table = soup.find(id='gsc_a_t')
+            article_trs = article_table.tbody.find_all('tr')
+            for article_tr in article_trs:
+                article_dict = OrderedDict()
+                article_url = article_tr.find('td').a.get('href')
+                article_url_components = urlparse(article_url)
+                url_params = parse_qs(article_url_components.query)
+                article_uid = url_params['citation_for_view'][0].split(':')[1]
+                article_dict['id'] = article_uid
+                article_dict['title'] = article_tr.find('td').a.text
+                article_dict['cited'] = article_tr.find_all('td')[1].a.text
+                article_dict['year'] = article_tr.find_all('td')[2].span.text
+                article_uids.append(article_dict)
+            return article_uids
+        except AttributeError:
+            print "Couldn't parse publications."
 
     def parse_author_bio(self, soup):
         try:
@@ -277,24 +307,82 @@ class AuthorParser(object):
             print "Couldn't parse total citations."
             return ''
 
-    def parse_co_authors(self, soup):
-        pass
+    def parse_co_authors_page_link(self, soup):
+        try:
+            co_authors_link_tag = soup.find(class_='gsc_rsb_lc')
+            co_authors_link = BASE_URL + co_authors_link_tag.get('href')
+            return co_authors_link
+        except AttributeError:
+            print "Couldn't parse coauthors link."
+            return ''
 
     def parse_h_index(self, soup):
-        pass
+        try:
+            table = soup.find(id='gsc_rsb_st')
+            h_index_row = table.find_all('tr')[2]
+            h_index = h_index_row.find_all('td')[1].text
+            return h_index
+        except AttributeError:
+            print "Couldn't parse h-index."
+            return ''
 
     def parse_i10_index(self, soup):
-        pass
+        try:
+            table = soup.find(id='gsc_rsb_st')
+            i10_index_row = table.find_all('tr')[3]
+            i10_index = i10_index_row('td')[1].text
+            return i10_index
+        except AttributeError:
+            print "Couldn't parse i10-index."
+            return ''
 
     def parse_publications_by_year(self, soup):
-        pass
+        pubs_by_year = []
+        try:
+            graph_div = soup.find(id='gsc_g')
+            years_div = graph_div.find(id='gsc_g_x')
+            year_spans = years_div.find_all('span')
+            bars_div = graph_div.find(id='gsc_g_bars')
+            bars = bars_div.find_all('a')
+            for i, year_span in enumerate(year_spans):
+                year = year_span.text
+                pubs_count = int(bars[i].text)
+                pubs_by_year.append({year: pubs_count})
+            return pubs_by_year
+        except AttributeError:
+            print "Couldn't parse publications by year."
+            return ''
 
     def parse_author_image_URL(self, soup):
+        try:
+            img_tag = soup.find(id='gsc_prf_pup')
+            image_url = BASE_URL + img_tag['src']
+            return image_url
+        except AttributeError:
+            print "Couldn't parse image URL."
+            return ''
+
+
+class CoAuthorsParser(object):
+    """
+    CoAuthorsParser is passed a link to an authors coauthors page.
+    It finds all coauthors names and UIDs.
+    """
+    def __init__(self, payload, author_dict):
+        soup = BeautifulSoup(payload, 'lxml')
+        self.result = self.parse(soup, author_dict)
+
+    def parse(self, soup, author_dict):
+        author_dict['coauthors'] = self.parse_coauthors(soup)
+
+    def get_coathors(self):
+        return self.coauthors
+
+    def parse_coauthors(self, soup):
         pass
 
-
-
-
+if __name__ == '__main__':
+    pass
 
 
 
