@@ -2,7 +2,7 @@
 import gs
 from bs4 import BeautifulSoup
 from collections import OrderedDict
-from nose.tools import set_trace; set_trace()
+from nose.tools import set_trace
 
 class TestAuthorQuery:
     """
@@ -52,9 +52,9 @@ class TestAuthorQuery:
         assert author_query_results[2]['email_domain'] == '@einstein.yu.edu'
 
 
-class TestAuthor:
+class TestAuthorParser:
     """
-    Testing for Author and AuthorParser
+    Testing for AuthorParser.
     """
     @classmethod
     def setup_class(cls):
@@ -72,10 +72,6 @@ class TestAuthor:
 
     def test_parse_author_UID(self):
         assert self.author_result['author_UID'] == 'hNTyptAAAAAJ'
-
-    def test_parse_article_UIDs(self):
-        print self.author_result['article_UIDs']
-        assert self.author_result['article_UIDs'] == ''
 
     def test_parse_author_bio(self):
         bio = 'Professor of Computing Science, University of Alberta'
@@ -118,21 +114,58 @@ class TestAuthor:
         print self.author_result['author_image_URL']
         assert self.author_result['author_image_URL'] == url
 
-    def test_parse_co_authors(self):
-        coauthors_link = 'https://scholar.google.ca/citations?view_op='\
-                            'list_colleagues&hl=en&user=hNTyptAAAAAJ'
-        assert self.author_parser.get_coathors_page_link() == coauthors_link
+
+class TestAuthorPublicationsParser:
+    """
+    Testing for Author Publications Parser
+    """
+    @classmethod
+    def setup_class(cls):
+        cls.html_file = open('test_data/sutton_home_page.html', 'r')
+        cls.pubs_dict = OrderedDict()
+        cls.publications_parser = gs.AuthorPublicationsParser(cls.html_file, cls.pubs_dict)
+        cls.pubs_result = cls.publications_parser.get_result()
+
+    @classmethod
+    def teardown_class(cls):
+        cls.html_file.close()
+
+    def test_result_size(self):
+        assert len(self.pubs_result['publications']) == 100
+
+    def test_parse_first_article(self):
+        assert self.pubs_result['publications'][0]['id'] == 'u5HHmVD_uO8C'
+        assert self.pubs_result['publications'][0]['title'] == 'Reinforcement learning: An introduction'
+        assert self.pubs_result['publications'][0]['cited'] == 19552
+        assert self.pubs_result['publications'][0]['year'] == 1998
+        assert self.pubs_result['publications'][0]['url'] == 'https://scholar.google.ca/citations?view_op=view_citation&hl=en&user=hNTyptAAAAAJ&pagesize=100&citation_for_view=hNTyptAAAAAJ:u5HHmVD_uO8C'
+
+    def test_parse_100th_article(self):
+        assert self.pubs_result['publications'][99]['id'] == 'bnK-pcrLprsC'
+        assert self.pubs_result['publications'][99]['title'] == 'Tuning-free step-size adaptation'
+        assert self.pubs_result['publications'][99]['cited'] == 13
+        assert self.pubs_result['publications'][99]['year'] == 2012
+        assert self.pubs_result['publications'][99]['url'] == 'https://scholar.google.ca/citations?view_op=view_citation&hl=en&user=hNTyptAAAAAJ&pagesize=100&citation_for_view=hNTyptAAAAAJ:bnK-pcrLprsC'
 
 
+class TestAuthorCoAuthorsParser:
+    """
+    Testing for TestAuthorCoAuthorsParser.
+    """
+    @classmethod
+    def setup_class(cls):
+        cls.html_file = open('test_data/sutton_coauthors_page.html', 'r')
+        cls.coauthors_dict = OrderedDict()
+        cls.coauthors_parser = gs.AuthorCoAuthorsParser(cls.html_file, cls.coauthors_dict)
+        cls.coauthors_result = cls.coauthors_parser.get_result() 
 
+    @classmethod
+    def teardown_class(cls):
+        cls.html_file.close()
 
-
-
-
-
-
-
-
+    def test_result_size(self):
+        pass
+        # assert len(self.coauthors_result['coauthors']) == 32
 
 
 
