@@ -164,12 +164,66 @@ class TestAuthorCoAuthorsParser:
         cls.html_file.close()
 
     def test_result_size(self):
-        pass
-        # assert len(self.coauthors_result['coauthors']) == 32
+        assert len(self.coauthors_result['coauthors']) == 32
+
+    def test_parse_first_coauthor_name(self):
+        assert self.coauthors_result['coauthors'][0]['name'] == 'Doina Precup'
+
+    def test_parse_first_coauthor_uid(self):
+        assert self.coauthors_result['coauthors'][0]['author_uid'] == 'j54VcVEAAAAJ' 
+
+    def test_parse_first_coauthor_url(self):
+        assert self.coauthors_result['coauthors'][0]['author_url'] == 'https://scholar.google.ca/citations?user=j54VcVEAAAAJ&hl=en' 
+
+    def test_parse_first_coauthor_citation_count(self):
+        assert self.coauthors_result['coauthors'][0]['citation_count'] == 3960
+
+    def test_parse_first_coauthor_domain(self):
+        assert self.coauthors_result['coauthors'][0]['domain'] == '@cs.mcgill.ca' 
+
+    def test_parse_first_coauthor_bio(self):
+        assert self.coauthors_result['coauthors'][0]['bio'] == 'McGill University'
+
+    def test_parse_first_coauthor_image_url(self):
+        assert self.coauthors_result['coauthors'][0]['author_image_url'] == 'https://scholar.google.ca/citations/images/avatar_scholar_150.jpg'
+
+    def test_parse_second_coauthor_name(self):
+        assert self.coauthors_result['coauthors'][1]['name'] == 'Satinder Singh'
+
+    def test_parse_second_coauthor_uid(self):
+        assert self.coauthors_result['coauthors'][1]['author_uid'] == 'q92q8SMAAAAJ' 
+
+    def test_parse_second_coauthor_url(self): 
+        assert self.coauthors_result['coauthors'][1]['author_url'] == 'https://scholar.google.ca/citations?user=q92q8SMAAAAJ&hl=en' 
+
+    def test_parse_second_coauthor_citation_count(self): 
+        assert self.coauthors_result['coauthors'][1]['citation_count'] == 17853
+
+    def test_parse_second_coauthor_domain(self):
+        assert self.coauthors_result['coauthors'][1]['domain'] == '@umich.edu' 
+
+    def test_parse_second_coauthor_bio(self):
+        assert self.coauthors_result['coauthors'][1]['bio'] == 'Professor, Computer Science & Engineering, University of Michigan'
+
+    def test_parse_second_coauthor_image_url(self):    
+        assert self.coauthors_result['coauthors'][1]['author_image_url'] == 'https://scholar.google.ca/citations?view_op=view_photo&user=q92q8SMAAAAJ&citpid=1'
 
 
 
+class TestAuthorPublicationParser:
+    """
+    Testing for Author Publication Parser
+    """
+    @classmethod
+    def setup_class(cls):
+        cls.html_file = open('test_data/sutton_home_page.html', 'r')
+        cls.pubs_dict = OrderedDict()
+        cls.publications_parser = gs.AuthorPublicationsParser(cls.html_file, cls.pubs_dict)
+        cls.pubs_result = cls.publications_parser.get_result()
 
+    @classmethod
+    def teardown_class(cls):
+        cls.html_file.close()
 
 
 

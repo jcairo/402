@@ -57,6 +57,19 @@ class GSHelper(object):
         author_coauthors = AuthorCoAuthors(author_uid)
         return author_coauthors.get_coauthors_info()
 
+
+class ParseHelper(object):
+    @staticmethod
+    def get_parameter_from_url(url, key):
+        """
+        Returns an attribute specified in a URL.
+        """
+        url_components = urlparse(url)
+        query_components = url_components.query
+        params = parse_qs(query_components)
+        value = params[key]
+        return value[0]
+
 class AuthorQuery(object):
     """
     Represents a query based on the author name and description.
@@ -426,7 +439,7 @@ class AuthorCoAuthors(object):
         query_url = url + urlencode(query_dict)
         return query_url
 
-    def get_coatuhors_info(self):
+    def get_coauthors_info(self):
         return self.coauthors_dict
 
 
@@ -447,7 +460,60 @@ class AuthorCoAuthorsParser(object):
         return coauthors_dict
 
     def parse_coauthors(self, soup):
-        pass
+        coauthors = []
+        try:
+            coauthor_div = soup.find(id='gsc_ccl')
+            coauthor_divs = coauthor_div.find_all(class_='gs_scl')
+        except AttributeError:
+            print "Couldn't find coauthors section."
+            return coauthors
+        for coauthor in coauthor_divs:
+            coauthor_dict = OrderedDict()
+            try:
+                coauthor_url = coauthor.div.a.get('href')
+                coauthor_uid =  ParseHelper.get_parameter_from_url(coauthor_url, 'user')
+                coauthor_dict['author_uid'] = coauthor_uid
+            except AttributeError:
+                coauthor_dict['author_uid'] = ''
+                print "Couldn't parse coauthor UID."
+            try:
+                coauthor_url = GSHelper.BASE_URL + coauthor.find(class_='gsc_1usr_name').a.get('href')
+                coauthor_dict['author_url'] = coauthor_url
+            except AttributeError:
+                coauthor_dict['author_url'] = ''
+                print "Couldn't parse coauthor URL."
+            try:
+                coauthor_dict['name'] = coauthor.find(class_='gsc_1usr_name').text
+            except AttributeError:
+                coauthor_dict['name'] = ''
+                print "Couldn't parse coauthor name."
+            try:
+                citation_div = coauthor.find(class_='gsc_1usr_cby')
+                coauthor_dict['citation_count'] = int(citation_div.text.split()[-1])
+            except AttributeError:
+                print "Couldn't parse coauthor citation count."
+                coauthor_dict['citation_count'] = ''
+            try:
+                domain_div = coauthor.find(class_='gsc_1usr_emlb')
+                coauthor_dict['domain'] = domain_div.text
+            except AttributeError:
+                print "Couldn't parse coauthor domain."
+                coauthor_dict['domain'] = ''
+            try:
+                bio_div = coauthor.find(class_='gsc_1usr_aff')
+                coauthor_dict['bio'] = bio_div.text
+            except AttributeError:
+                print "Couldn't parse coauthor bio."
+                coauthor_dict['bio'] = ''
+            try:
+                image_relative_url = coauthor.div.a.img.get('src')
+                coauthor_dict['author_image_url'] = GSHelper.BASE_URL + image_relative_url
+            except AttributeError:
+                print "Couldn't parse author image url."
+                coauthor_dict['author_image_url'] = ''
+            coauthors.append(coauthor_dict)  
+
+        return coauthors
 
 
 class AuthorPublications(object):
@@ -533,7 +599,7 @@ if __name__ == '__main__':
         # cli args = coauthors, author_uid
         # python gs.py coauthors 'Q0ZsJ_UAAAAJ'
         author_uid = sys.argv[2]
-        response_body = json.dumps(GSHelper.get_coauthors(author_uid), indent=4)
+        print json.dumps(GSHelper.get_coauthors(author_uid), indent=4)
 
     if sys.argv[1] == '--publications':
         # /author/publications
