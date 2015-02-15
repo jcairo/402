@@ -6,7 +6,7 @@ from collections import OrderedDict
 import requests
 import json
 import sys
-
+import re
 
 
 class GSHelper(object):
@@ -583,12 +583,135 @@ class AuthorPublicationsParser(object):
 
 
 class AuthorPublication(object):
-    def __init__(self):
-        pass
+    def __init__(self, author_uid, publication_uid):
+        self.pub_dict = OrderedDict()
+        self.pub_dict['author_uid'] = author_uid
+        self.pub_dict['publication_uid'] = author_uid
+        import pdb; pdb.set_trace()
+        query_url = self.get_page_url(author_uid, publication_uid)
+        html = GSHelper.get_url(query_url)
+        self.author_pub_parser = AuthorPublicationParser(html, self.pub_dict)
+
+    def get_pub_info(self):
+        return self.pub_dict
+
+    def get_page_url(self, author_uid, publication_uid):
+        url = GSHelper.BASE_URL + GSHelper.CITATIONS_URL_EXTENSION
+        query_dict = OrderedDict()
+        query_dict['view_op'] = 'view_citation'
+        query_dict['hl'] = 'en'
+        query_dict['user'] = author_uid
+        query_dict['citation_for_view'] = author_uid + ':' + publication_uid
+        query_url = url + urlencode(query_dict)
+        return query_url
+
 
 class AuthorPublicationParser(object):
-    def __init__(self):
-        pass
+    def __init__(self, payload, pub_dict):
+        soup = BeautifulSoup(payload, 'lxml')
+        self.result = self.parse(soup, pub_dict)
+
+    def get_result(self):
+        return self.result
+
+    def parse(self, soup, pub_dict):
+        pub_dict['publication_url'] = self.parse_publication_url(soup)
+        pub_dict['authors'] = self.parse_authors(soup)
+        pub_dict['publication_date'] = self.parse_publication_date(soup)
+        pub_dict['journal_name'] = self.parse_journal_name(soup)
+        pub_dict['page_range'] = self.parse_page_range(soup)
+        pub_dict['publisher'] = self.parse_publisher(soup)
+        pub_dict['partial_abstract'] = self.parse_abstract(soup)
+        pub_dict['citation_count'] = self.parse_citation_count(soup)
+        pub_dict['citations_by_year'] = self.parse_citations_by_year(soup)
+        return pub_dict
+
+    def parse_publication_url(self, soup):
+        try:
+            link_div = soup.find(id='gsc_title').a.get('href')
+        except AttributeError:
+            print "Couldn't parse publication URL."
+            link_div = ''
+        return link_div
+
+    def parse_authors(self, soup):
+        try:
+            authors_text = soup.find('div', text='Authors').next_sibling.text
+            authors = authors_text.split(',')
+        except AttributeError:
+            print "Couldn't parse publication authors."
+            authors = []
+        return authors
+
+    def parse_publication_date(self, soup):
+        try:
+            date = soup.find('div', text='Publication date').next_sibling.text
+        except AttributeError:
+            print "Couldn't parse publication date."
+            date = ''
+        return date
+
+    def parse_journal_name(self, soup):
+        try:
+            journal_name = soup.find('div', text='Journal').next_sibling.text
+        except AttributeError:
+            print "Couldn't parse publication journal name."
+            journal_name = ''
+        return journal_name
+
+    def parse_page_range(self, soup):
+        try:
+            page_range = soup.find('div', text='Pages').next_sibling.text
+        except AttributeError:
+            print "Couldn't parse publication page range."
+            page_range = ''
+        return page_range
+
+    def parse_publisher(self, soup):
+        try:
+            publisher = soup.find('div', text='Publisher').next_sibling.text
+        except AttributeError:
+            print "Couldn't parse publication publisher."
+            publisher = ''
+        return publisher
+
+    def parse_abstract(self, soup):
+        try:
+            abstract = soup.find('div', text='Description').next_sibling.text
+        except AttributeError:
+            print "Couldn't parse publication abstract."
+            abstract = ''
+        return abstract
+
+    def parse_citation_count(self, soup):
+        try:
+            count_string = soup.find('div', text='Total citations').next_sibling.div.a.text
+            count = int(count_string.split()[-1])
+        except AttributeError, TypeError:
+            print "Couldn't parse publication citation count."
+            count = ''
+        return count
+
+    def parse_citations_by_year(self, soup):
+        citations_count = []
+        try:
+            graph = soup.find(id='gsc_graph_bars')
+            years = graph.find_all('span')
+            counts = graph.find_all('a')
+        except AttributeError:
+            print "Couldn't parse publication citations by year."
+            return citations_count
+        for year, count in zip(years, counts):
+            result_dict = OrderedDict()
+            try:
+                result_dict['year'] = int(year.text)
+                result_dict['count'] = int(count.text)
+                citations_count.append(result_dict)
+            except AttributeError, TypeError:
+                print "Couldn't parse publication citation by year."
+                break
+        return citations_count
+
 
 if __name__ == '__main__':
     if sys.argv[1] == '--search':
@@ -625,6 +748,7 @@ if __name__ == '__main__':
         # /author/publication
         # cli args = publication, author_uid, pub_uid
         # python gs.py publication 'Q0ZsJ_UAAAAJ' 'u-x6o8ySG0sC'
+        import pdb; pdb.set_trace()
         author_uid = sys.argv[2]
         publication_uid = sys.argv[3]
         print json.dumps(GSHelper.get_publication(author_uid, publication_uid), indent=4)

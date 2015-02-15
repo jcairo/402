@@ -48,7 +48,7 @@ Get an authors publications, last arg indicates page
 $ ./gs.py --publications Q0ZsJ_UAAAAJ 0
 ```
 
-Get an authors publication -  non functional still...  
+et an authors publication   
 ```
 $ ./gs.py --publication Q0ZsJ_UAAAAJ u-x6o8ySG0sC
 ```

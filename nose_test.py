@@ -218,7 +218,7 @@ class TestAuthorPublicationParser:
     def setup_class(cls):
         cls.html_file = open('test_data/sutton_publication.html', 'r')
         cls.pub_dict = OrderedDict()
-        cls.publication_parser = gs.AuthorPublicationParser(cls.html_file, cls.pubs_dict)
+        cls.publication_parser = gs.AuthorPublicationParser(cls.html_file, cls.pub_dict)
         cls.pub_result = cls.publication_parser.get_result()
 
     @classmethod
@@ -228,9 +228,6 @@ class TestAuthorPublicationParser:
     def test_publication_url(self):
         self.pub_result['publication_url'] == 'https://scholar.google.ca/citations?view_op=view_citation&hl=en&user=hNTyptAAAAAJ&pagesize=100&citation_for_view=hNTyptAAAAAJ:u5HHmVD_uO8C'
 
-    def test_publication_document_url(self):
-        self.pub_result['document_url'] == 'http://ieeexplore.ieee.org/xpl/login.jsp?tp=&arnumber=712192&url=http%3A%2F%2Fieeexplore.ieee.org%2Fxpls%2Fabs_all.jsp%3Farnumber%3D712192'
-
     def test_publication_authors(self):
         self.pub_result['authors'] == ['Richard S Sutton', 'Andrew G Barto']
 
@@ -238,10 +235,13 @@ class TestAuthorPublicationParser:
         self.pub_result['publication_date'] == '1998/3/1'
 
     def test_publication_journal_name(self):
-        self.pub_result['journal_name'] == 'MIT press'
+        self.pub_result['journal_name'] == ''
+
+    def test_publication_page_range(self):
+        self.pub_result['page_range'] == ''
 
     def test_publication_publisher(self):
-        self.pub_result['publisher'] == 'n/a'
+        self.pub_result['publisher'] == 'MIT press'
 
     def test_publication_partial_abstract(self):
         self.pub_result['partial_abstract'] == """
