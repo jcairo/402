@@ -27,6 +27,11 @@ $ workon 402project
 $ pip install -r requirements.txt  
 ```
 
+Running Tests, please run before committing changes.
+```
+$ nosetests nose_test.py
+```
+
 Command Line useage
 Search for an author  
 ```
