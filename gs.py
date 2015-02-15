@@ -468,55 +468,81 @@ class AuthorCoAuthorsParser(object):
             coauthor_div = soup.find(id='gsc_ccl')
             coauthor_divs = coauthor_div.find_all(class_='gs_scl')
         except AttributeError:
-            print "Couldn't find coauthors section."
+            print "Couldn't find coauthors."
             return coauthors
         for coauthor in coauthor_divs:
             coauthor_dict = OrderedDict()
-            try:
-                coauthor_url = coauthor.div.a.get('href')
-                coauthor_uid =  ParseHelper.get_parameter_from_url(coauthor_url, 'user')
-                coauthor_dict['author_uid'] = coauthor_uid
-            except AttributeError:
-                coauthor_dict['author_uid'] = ''
-                print "Couldn't parse coauthor UID."
-            try:
-                coauthor_url = GSHelper.BASE_URL + coauthor.find(class_='gsc_1usr_name').a.get('href')
-                coauthor_dict['author_url'] = coauthor_url
-            except AttributeError:
-                coauthor_dict['author_url'] = ''
-                print "Couldn't parse coauthor URL."
-            try:
-                coauthor_dict['name'] = coauthor.find(class_='gsc_1usr_name').text
-            except AttributeError:
-                coauthor_dict['name'] = ''
-                print "Couldn't parse coauthor name."
-            try:
-                citation_div = coauthor.find(class_='gsc_1usr_cby')
-                coauthor_dict['citation_count'] = int(citation_div.text.split()[-1])
-            except AttributeError:
-                print "Couldn't parse coauthor citation count."
-                coauthor_dict['citation_count'] = ''
-            try:
-                domain_div = coauthor.find(class_='gsc_1usr_emlb')
-                coauthor_dict['domain'] = domain_div.text
-            except AttributeError:
-                print "Couldn't parse coauthor domain."
-                coauthor_dict['domain'] = ''
-            try:
-                bio_div = coauthor.find(class_='gsc_1usr_aff')
-                coauthor_dict['bio'] = bio_div.text
-            except AttributeError:
-                print "Couldn't parse coauthor bio."
-                coauthor_dict['bio'] = ''
-            try:
-                image_relative_url = coauthor.div.a.img.get('src')
-                coauthor_dict['author_image_url'] = GSHelper.BASE_URL + image_relative_url
-            except AttributeError:
-                print "Couldn't parse author image url."
-                coauthor_dict['author_image_url'] = ''
-            coauthors.append(coauthor_dict)  
-
+            coauthor_dict['author_uid'] = self.parse_author_uid(coauthor)
+            coauthor_dict['author_url'] = self.parse_author_url(coauthor)
+            coauthor_dict['name'] = self.parse_coauthor_name(coauthor)
+            coauthor_dict['citation_count'] = self.parse_coauthor_citations(coauthor)
+            coauthor_dict['domain'] = self.parse_domain(coauthor)
+            coauthor_dict['bio'] = self.parse_bio(coauthor)
+            coauthor_dict['author_image_url'] = self.parse_image_url(coauthor)
+            coauthors.append(coauthor_dict)
         return coauthors
+
+    def parse_author_uid(self, coauthor_soup):
+        try:
+            coauthor_url = coauthor_soup.div.a.get('href')
+            coauthor_uid =  ParseHelper.get_parameter_from_url(coauthor_url, 'user')
+        except AttributeError:
+            print "Couldn't parse coauthor UID."
+            coauthor_uid = ''
+        return coauthor_uid
+
+    def parse_author_url(self, coauthor_soup):
+        try:
+            coauthor_url = GSHelper.BASE_URL + coauthor_soup.find(class_='gsc_1usr_name').a.get('href')
+            coauthor_url = coauthor_url
+        except AttributeError:
+            print "Couldn't parse coauthor URL."
+            coauthor_url = ''
+        return coauthor_url
+
+    def parse_coauthor_name(self, coauthor_soup):
+        try:
+            coauthor_name = coauthor_soup.find(class_='gsc_1usr_name').text
+        except AttributeError:
+            print "Couldn't parse coauthor name."
+            coauthor_name = ''
+        return coauthor_name
+
+    def parse_coauthor_citations(self, coauthor_soup):
+        try:
+            citation_div = coauthor_soup.find(class_='gsc_1usr_cby')
+            citation_count = int(citation_div.text.split()[-1])
+        except AttributeError:
+            print "Couldn't parse coauthor citation count."
+            citation_count = ''
+        return citation_count
+
+    def parse_domain(self, coauthor_soup):
+        try:
+            domain_div = coauthor_soup.find(class_='gsc_1usr_emlb')
+            domain = domain_div.text
+        except AttributeError:
+            print "Couldn't parse coauthor domain."
+            domain = ''
+        return domain
+
+    def parse_bio(self, coauthor_soup):
+        try:
+            bio_div = coauthor_soup.find(class_='gsc_1usr_aff')
+            bio = bio_div.text
+        except AttributeError:
+            print "Couldn't parse coauthor bio."
+            bio = ''
+        return bio
+
+    def parse_image_url(self, coauthor_soup):
+        try:
+            image_relative_url = coauthor_soup.div.a.img.get('src')
+            image_url = GSHelper.BASE_URL + image_relative_url
+        except AttributeError:
+            print "Couldn't parse author image url."
+            image_url = ''
+        return image_url
 
 
 class AuthorPublications(object):
@@ -589,7 +615,6 @@ class AuthorPublication(object):
         self.pub_dict = OrderedDict()
         self.pub_dict['author_uid'] = author_uid
         self.pub_dict['publication_uid'] = author_uid
-        import pdb; pdb.set_trace()
         query_url = self.get_page_url(author_uid, publication_uid)
         html = GSHelper.get_url(query_url)
         self.author_pub_parser = AuthorPublicationParser(html, self.pub_dict)
@@ -750,7 +775,6 @@ if __name__ == '__main__':
         # /author/publication
         # cli args = publication, author_uid, pub_uid
         # python gs.py publication 'Q0ZsJ_UAAAAJ' 'u-x6o8ySG0sC'
-        import pdb; pdb.set_trace()
         author_uid = sys.argv[2]
         publication_uid = sys.argv[3]
         print json.dumps(GSHelper.get_publication(author_uid, publication_uid), indent=4)
