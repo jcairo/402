@@ -404,9 +404,9 @@ class AuthorParser(object):
             bars_div = graph_div.find(id='gsc_g_bars')
             bars = bars_div.find_all('a')
             for i, year_span in enumerate(year_spans):
-                year = year_span.text
+                year = int(year_span.text)
                 pubs_count = int(bars[i].text)
-                pubs_by_year.append({year: pubs_count})
+                pubs_by_year.append({"year": year, "count": pubs_count})
             return pubs_by_year
         except AttributeError:
             print "Couldn't parse publications by year."
@@ -580,6 +580,14 @@ class AuthorPublicationsParser(object):
         except AttributeError:
             print "Couldn't parse publications."
 
+
+class AuthorPublication(object):
+    def __init__(self):
+        pass
+
+class AuthorPublicationParser(object):
+    def __init__(self):
+        pass
 
 if __name__ == '__main__':
     if sys.argv[1] == '--search':

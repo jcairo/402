@@ -98,15 +98,15 @@ class TestAuthorParser:
     def test_parse_author_pubs_by_year(self):
         print self.author_result['publications_by_year']
         assert self.author_result['publications_by_year'] == [
-                            {'2007': 2712},
-                            {'2008': 2687},
-                            {'2009': 2828},
-                            {'2010': 2902},
-                            {'2011': 2983},
-                            {'2012': 3148},
-                            {'2013': 3113},
-                            {'2014': 3149},
-                            {'2015': 250}]
+                            {'year': 2007, 'count': 2712},
+                            {'year': 2008, 'count': 2687},
+                            {'year': 2009, 'count': 2828},
+                            {'year': 2010, 'count': 2902},
+                            {'year': 2011, 'count': 2983},
+                            {'year': 2012, 'count': 3148},
+                            {'year': 2013, 'count': 3113},
+                            {'year': 2014, 'count': 3149},
+                            {'year': 2015, 'count': 250}]
 
     def test_author_image_URL(self):
         url = 'https://scholar.google.ca/citations?'\
@@ -216,14 +216,66 @@ class TestAuthorPublicationParser:
     """
     @classmethod
     def setup_class(cls):
-        cls.html_file = open('test_data/sutton_home_page.html', 'r')
-        cls.pubs_dict = OrderedDict()
-        cls.publications_parser = gs.AuthorPublicationsParser(cls.html_file, cls.pubs_dict)
-        cls.pubs_result = cls.publications_parser.get_result()
+        cls.html_file = open('test_data/sutton_publication.html', 'r')
+        cls.pub_dict = OrderedDict()
+        cls.publication_parser = gs.AuthorPublicationParser(cls.html_file, cls.pubs_dict)
+        cls.pub_result = cls.publication_parser.get_result()
 
     @classmethod
     def teardown_class(cls):
         cls.html_file.close()
 
+    def test_publication_url(self):
+        self.pub_result['publication_url'] == 'https://scholar.google.ca/citations?view_op=view_citation&hl=en&user=hNTyptAAAAAJ&pagesize=100&citation_for_view=hNTyptAAAAAJ:u5HHmVD_uO8C'
+
+    def test_publication_document_url(self):
+        self.pub_result['document_url'] == 'http://ieeexplore.ieee.org/xpl/login.jsp?tp=&arnumber=712192&url=http%3A%2F%2Fieeexplore.ieee.org%2Fxpls%2Fabs_all.jsp%3Farnumber%3D712192'
+
+    def test_publication_authors(self):
+        self.pub_result['authors'] == ['Richard S Sutton', 'Andrew G Barto']
+
+    def test_publication_date(self):
+        self.pub_result['publication_date'] == '1998/3/1'
+
+    def test_publication_journal_name(self):
+        self.pub_result['journal_name'] == 'MIT press'
+
+    def test_publication_publisher(self):
+        self.pub_result['publisher'] == 'n/a'
+
+    def test_publication_partial_abstract(self):
+        self.pub_result['partial_abstract'] == """
+                            This is one of the first books in the new adaptive computation and machine learning series. 
+                            The goal of this book is to provide a simple account of the key ideas of reinforcement 
+                            learning: a learning system that adapts its behavior in order to maximize a special signal 
+                            from its environment. The treatment of the subject takes the point of view of artificial 
+                            intelligence and engineering but without the rigorous formal mathematical treatment which 
+                            can distract from the simplicity of the underlying ideas. The book may be used as ...
+                            """
+
+    def test_publication_citation_count(self):
+        self.pub_result['citation_count'] == 19597
+
+    def test_citation_count_by_year(self):
+        self.pub_result['citations_by_year'] == [
+                            {'year': 1998, 'count': 74},
+                            {'year': 1999, 'count': 205},
+                            {'year': 2000, 'count': 309},
+                            {'year': 2001, 'count': 442},
+                            {'year': 2002, 'count': 536},
+                            {'year': 2003, 'count': 721},
+                            {'year': 2004, 'count': 877},
+                            {'year': 2005, 'count': 1111},
+                            {'year': 2006, 'count': 1221},
+                            {'year': 2007, 'count': 1431},
+                            {'year': 2008, 'count': 1525},
+                            {'year': 2009, 'count': 1653},
+                            {'year': 2010, 'count': 1674},
+                            {'year': 2011, 'count': 1790},
+                            {'year': 2012, 'count': 1784},
+                            {'year': 2013, 'count': 1885},
+                            {'year': 2014, 'count': 1906},
+                            {'year': 2015, 'count': 167}
+                            ]
 
 
