@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from bs4 import BeautifulSoup
 from urllib import urlencode
 from urlparse import parse_qs, urlparse
@@ -614,7 +615,10 @@ if __name__ == '__main__':
         # cli args = publications, author_uid, page
         # python gs.py publications 'Q0ZsJ_UAAAAJ' '0'
         author_uid = sys.argv[2]
-        page = sys.argv[3]
+        try:
+            page = sys.argv[3]
+        except IndexError:
+            page = 0
         print json.dumps(GSHelper.get_publications(author_uid, page), indent=4)
 
     if sys.argv[1] == '--publication':

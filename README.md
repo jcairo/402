@@ -26,3 +26,29 @@ Make sure venv is activated and install required packages with...
 $ workon 402project  
 $ pip install -r requirements.txt  
 ```
+
+Command Line useage
+Search for an author  
+```
+$ ./gs.py --search 'V Guana'
+```
+
+Get an author
+```
+$ ./gs.py --author Q0ZsJ_UAAAAJ
+```
+
+Get an authors coauthors  
+```
+$ ./gs.py --coauthors Q0ZsJ_UAAAAJ
+```
+
+Get an authors publications, last arg indicates page  
+```
+$ ./gs.py --publications Q0ZsJ_UAAAAJ 0
+```
+
+Get an authors publication -  non functional still...  
+```
+$ ./gs.py --publication Q0ZsJ_UAAAAJ u-x6o8ySG0sC
+```
