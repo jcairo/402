@@ -71,6 +71,7 @@ class ParseHelper(object):
         value = params[key]
         return value[0]
 
+
 class AuthorQuery(object):
     """
     Represents a query based on the author name and description.
@@ -141,7 +142,7 @@ class AuthorQuery(object):
             response = requests.get(url, headers=header)
         if response.status_code != 200:
             raise requests.HTTPError
-        query_resp_parser = AuthorQueryResponseParser(response.text)
+        query_resp_parser = AuthorQueryParser(response.text)
         self.search_results = query_resp_parser.get_results()
         return self.search_results
 
@@ -173,7 +174,7 @@ class AuthorQuery(object):
         return self.search_results[index]['uid']
 
 
-class AuthorQueryResponseParser(object):
+class AuthorQueryParser(object):
     """
     Parses the html payload of an author query.
     Returns an OrderedDict of authors found.
@@ -291,6 +292,7 @@ class Author(object):
         query_dict['user'] = author_uid
         query_dict['hl'] = 'en'
         return GSHelper.BASE_URL + GSHelper.CITATIONS_URL_EXTENSION + urlencode(query_dict)
+
 
 class AuthorParser(object):
     """

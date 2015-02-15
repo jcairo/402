@@ -6,7 +6,7 @@ from nose.tools import set_trace
 
 class TestAuthorQuery:
     """
-    Testing for AuthorQuery and AuthorQueryResponseParser
+    Testing for AuthorQuery.
     """
     @classmethod
     def setup_class(cls):
@@ -27,29 +27,67 @@ class TestAuthorQuery:
         query = gs.AuthorQuery('Victor Guana', author_description='ualberta', labels=['Model Driven Development', 'Code Generation'])
         assert query.query_URL == test_url
 
+
+class TestAuthorQueryParser:
+    """
+    Testing for AuthorQueryParser.
+    """
+    @classmethod
+    def setup_class(cls):
+        cls.html_file = open('test_data/einstein_search.html', 'r')
+        cls.author_query_results = gs.AuthorQueryParser(cls.html_file).get_results()
+
+    @classmethod
+    def teardown_class(cls):
+        cls.html_file.close()
+
     def test_result_size(self):
-        # retrieve locally stored copy of search for 'A Einstein label:Physics'
-        html_file = open('test_data/einstein_search.html', 'r')
-        author_query_results = gs.AuthorQueryResponseParser(html_file).get_results()
-        assert len(author_query_results) == 3
+        assert len(self.author_query_results) == 3
 
-        assert author_query_results[0]['name'] == 'Albert Einstein'
-        assert author_query_results[0]['scholar_page'] == 'https://scholar.google.ca/citations?user=qc6CJjYAAAAJ&hl=en'
-        assert author_query_results[0]['affiliation'] == 'Institute of Advanced Studies, Princeton'
-        assert author_query_results[0]['research_areas'] == ['Physics']
-        assert author_query_results[0]['email_domain'] == ''
+    def test_first_result_name(self):
+        assert self.author_query_results[0]['name'] == 'Albert Einstein'
 
-        assert author_query_results[1]['name'] == 'James Storey'
-        assert author_query_results[1]['scholar_page'] == 'https://scholar.google.ca/citations?user=b3I0YM8AAAAJ&hl=en'
-        assert author_query_results[1]['affiliation'] == 'Junior Independent Researcher at the Albert Einstein Center for Fundamental Physics at the'
-        assert author_query_results[1]['research_areas'] == ['Physics']
-        assert author_query_results[1]['email_domain'] == '@lhep.unibe.ch'
+    def test_first_result_page_url(self):
+        assert self.author_query_results[0]['scholar_page'] == 'https://scholar.google.ca/citations?user=qc6CJjYAAAAJ&hl=en'
 
-        assert author_query_results[2]['name'] == 'Deniz B Temel'
-        assert author_query_results[2]['scholar_page'] == 'https://scholar.google.ca/citations?user=H5JpaNUAAAAJ&hl=en'
-        assert author_query_results[2]['affiliation'] == 'Postdoctoral Fellow in Albert Einstein College of Medicine'
-        assert author_query_results[2]['research_areas'] == ['Biophysics', 'physics', 'biochemistry', 'structural biology', 'Nuclear magnetic resonance']
-        assert author_query_results[2]['email_domain'] == '@einstein.yu.edu'
+    def test_first_result_affiliation(self):
+        assert self.author_query_results[0]['affiliation'] == 'Institute of Advanced Studies, Princeton'
+
+    def test_first_result_research_areas(self):
+        assert self.author_query_results[0]['research_areas'] == ['Physics']
+
+    def test_first_result_email_domain(self):
+        assert self.author_query_results[0]['email_domain'] == ''
+
+    def test_second_result_name(self):
+        assert self.author_query_results[1]['name'] == 'James Storey'
+
+    def test_second_result_page_url(self):
+        assert self.author_query_results[1]['scholar_page'] == 'https://scholar.google.ca/citations?user=b3I0YM8AAAAJ&hl=en'
+
+    def test_second_result_affiliation(self):
+        assert self.author_query_results[1]['affiliation'] == 'Junior Independent Researcher at the Albert Einstein Center for Fundamental Physics at the'
+
+    def test_second_result_research_areas(self):
+        assert self.author_query_results[1]['research_areas'] == ['Physics']
+
+    def test_second_result_email_domain(self):
+        assert self.author_query_results[1]['email_domain'] == '@lhep.unibe.ch'
+
+    def test_third_result_name(self):
+        assert self.author_query_results[2]['name'] == 'Deniz B Temel'
+
+    def test_third_result_page_url(self):
+        assert self.author_query_results[2]['scholar_page'] == 'https://scholar.google.ca/citations?user=H5JpaNUAAAAJ&hl=en'
+
+    def test_third_result_affiliations(self):
+        assert self.author_query_results[2]['affiliation'] == 'Postdoctoral Fellow in Albert Einstein College of Medicine'
+
+    def test_third_result_research_areas(self):
+        assert self.author_query_results[2]['research_areas'] == ['Biophysics', 'physics', 'biochemistry', 'structural biology', 'Nuclear magnetic resonance']
+
+    def test_third_result_email_domain(self):
+        assert self.author_query_results[2]['email_domain'] == '@einstein.yu.edu'
 
 
 class TestAuthorParser:
@@ -133,18 +171,34 @@ class TestAuthorPublicationsParser:
     def test_result_size(self):
         assert len(self.pubs_result['publications']) == 100
 
-    def test_parse_first_article(self):
+    def test_parse_first_article_id(self):
         assert self.pubs_result['publications'][0]['id'] == 'u5HHmVD_uO8C'
+
+    def test_parse_first_article_title(self):
         assert self.pubs_result['publications'][0]['title'] == 'Reinforcement learning: An introduction'
+
+    def test_parse_first_article_citation_count(self):
         assert self.pubs_result['publications'][0]['cited'] == 19552
+
+    def test_parse_first_arcticle_year(self):
         assert self.pubs_result['publications'][0]['year'] == 1998
+
+    def test_parse_first_article_url(self):
         assert self.pubs_result['publications'][0]['url'] == 'https://scholar.google.ca/citations?view_op=view_citation&hl=en&user=hNTyptAAAAAJ&pagesize=100&citation_for_view=hNTyptAAAAAJ:u5HHmVD_uO8C'
 
-    def test_parse_100th_article(self):
+    def test_parse_100th_article_id(self):
         assert self.pubs_result['publications'][99]['id'] == 'bnK-pcrLprsC'
+
+    def test_parse_100th_article_title(self):
         assert self.pubs_result['publications'][99]['title'] == 'Tuning-free step-size adaptation'
+
+    def test_parse_100th_article_citation_count(self):
         assert self.pubs_result['publications'][99]['cited'] == 13
+
+    def test_parse_100th_article_year(self):
         assert self.pubs_result['publications'][99]['year'] == 2012
+
+    def test_parse_100th_article_url(self):
         assert self.pubs_result['publications'][99]['url'] == 'https://scholar.google.ca/citations?view_op=view_citation&hl=en&user=hNTyptAAAAAJ&pagesize=100&citation_for_view=hNTyptAAAAAJ:bnK-pcrLprsC'
 
 
