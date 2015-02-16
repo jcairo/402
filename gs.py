@@ -100,19 +100,7 @@ class AuthorQuery(object):
     '3'
     """
     def __init__(self, author_name, author_description=None, labels=None):
-        query_dict = OrderedDict()
-        if author_description:
-            query_dict['mauthors'] = author_name + ' ' + author_description
-        else:
-            query_dict['mauthors'] = author_name
-
-        if labels is not None:
-            formatted_labels = self.format_labels(labels)
-            query_dict['mauthors'] += formatted_labels
-
-        query_dict['hl'] = 'en'
-        query_dict['view_op'] = 'search_authors'
-        self.query_URL = self.get_url(query_dict)
+        self.query_URL = self.get_url(author_name, author_description, labels)
         self.search(self.query_URL)
 
     def format_labels(self, labels):
@@ -124,10 +112,20 @@ class AuthorQuery(object):
             formatted_labels += ' label:' + label.replace(' ', '_')
         return formatted_labels
 
-    def get_url(self, query_dict):
+    def get_url(self, author_name, author_description=None, labels=None):
         """
         Generate the http request URL submittable to GS
         """
+        query_dict = OrderedDict()
+        if author_description:
+            query_dict['mauthors'] = author_name + ' ' + author_description
+        else:
+            query_dict['mauthors'] = author_name
+        if labels is not None:
+            formatted_labels = self.format_labels(labels)
+            query_dict['mauthors'] += formatted_labels
+        query_dict['hl'] = 'en'
+        query_dict['view_op'] = 'search_authors'
         query_URL = GSHelper.BASE_URL + GSHelper.CITATIONS_URL_EXTENSION + urlencode(query_dict)
         return query_URL
 
@@ -135,22 +133,10 @@ class AuthorQuery(object):
         """
         Return an array of authors found in the search
         """
-        header = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:27.0) Gecko/20100101 Firefox/27.0'}
-        if url is None:
-            response = requests.get(self.query_URL, headers=header)
-        else:
-            response = requests.get(url, headers=header)
-        if response.status_code != 200:
-            raise requests.HTTPError
-        query_resp_parser = AuthorQueryParser(response.text)
+        html = GSHelper.get_url(url)
+        query_resp_parser = AuthorQueryParser(html)
         self.search_results = query_resp_parser.get_results()
         return self.search_results
-
-    def get_first_result_uid(self):
-        return self.get_nth_result_uid(0)
-
-    def get_nth_result_uid(self, index):
-        return self.search_results[index]['uid']
 
     def get_first_result_url(self):
         """
@@ -168,7 +154,7 @@ class AuthorQuery(object):
         return self.search_results.length
 
     def get_first_result_uid(self):
-        return get_nth_result_uid(0)
+        return self.get_nth_result_uid(0)
 
     def get_nth_result_uid(self, index):
         return self.search_results[index]['uid']
