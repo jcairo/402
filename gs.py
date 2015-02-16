@@ -403,17 +403,22 @@ class AuthorParser(object):
         try:
             graph_div = soup.find(id='gsc_g')
             years_div = graph_div.find(id='gsc_g_x')
-            year_spans = years_div.find_all('span')
-            bars_div = graph_div.find(id='gsc_g_bars')
-            bars = bars_div.find_all('a')
-            for i, year_span in enumerate(year_spans):
-                year = int(year_span.text)
-                pubs_count = int(bars[i].text)
-                pubs_by_year.append({"year": year, "count": pubs_count})
-            return pubs_by_year
+            years = years_div.find_all('span')
+            counts_div = graph_div.find(id='gsc_g_bars')
+            counts = counts_div.find_all('a')
         except AttributeError:
             print "Couldn't parse publications by year."
             return ''
+        for year, count in zip(years, counts):
+            result_dict = OrderedDict()
+            try:
+                result_dict['year'] = int(year.text)
+                result_dict['count'] = int(count.text)
+                pubs_by_year.append(result_dict)
+            except AttributeError:
+                print "Couldn't parse publications by year."
+                break
+        return pubs_by_year
 
     def parse_author_image_URL(self, soup):
         try:
@@ -447,10 +452,6 @@ class AuthorCoAuthors(object):
 
 
 class AuthorCoAuthorsParser(object):
-    """
-    CoAuthorsParser is passed a link to an authors coauthors page.
-    It finds all coauthors names and UIDs.
-    """
     def __init__(self, payload, coauthors_dict):
         soup = BeautifulSoup(payload, 'lxml')
         self.result = self.parse(soup, coauthors_dict)
@@ -648,11 +649,6 @@ class AuthorPublicationsParser(object):
             print "Couldn't parse year."
             year = ''
         return year
-
-
-
-
-
 
 
 class AuthorPublication(object):
