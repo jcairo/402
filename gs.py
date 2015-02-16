@@ -584,30 +584,75 @@ class AuthorPublicationsParser(object):
         article_uids = []
         try:
             article_table = soup.find(id='gsc_a_t')
-            article_trs = article_table.tbody.find_all('tr')
-            for article_tr in article_trs:
-                article_dict = OrderedDict()
-                article_url = article_tr.find('td').a.get('href')
-                article_url_components = urlparse(article_url)
-                url_params = parse_qs(article_url_components.query)
-                article_uid = url_params['citation_for_view'][0].split(':')[1]
-                article_dict['url'] = GSHelper.BASE_URL + article_url
-                article_dict['id'] = article_uid
-                article_dict['title'] = article_tr.find('td').a.text
-                # Prevents issue when an article has been cited 0 times
-                # or has no year associated.
-                try:
-                    article_dict['cited'] = int(article_tr.find_all('td')[1].a.text)
-                except ValueError:
-                    article_dict['cited'] = 0
-                try:
-                    article_dict['year'] = int(article_tr.find_all('td')[2].span.text)
-                except ValueError:
-                    article_dict['year'] = 'n/a'
-                article_uids.append(article_dict)
-            return article_uids
+            articles = article_table.tbody.find_all('tr')
         except AttributeError:
             print "Couldn't parse publications."
+            return article_uids
+        for article in articles:
+            article_dict = OrderedDict()
+            article_dict['url'] = self.parse_article_url(article)
+            article_dict['id'] = self.parse_article_uid(article)
+            article_dict['title'] = self.parse_article_title(article)
+            article_dict['cited'] = self.parse_citation_count(article)
+            article_dict['year'] = self.parse_year(article)
+            article_uids.append(article_dict)
+        return article_uids
+        
+    def parse_article_url(self, article_soup):
+        try:
+            article_url = article_soup.find('td').a.get('href')
+            url = GSHelper.BASE_URL + article_url
+        except AttributeError:
+            print "Couldn't parse article url." 
+            url = ''
+        return url
+
+    def parse_article_title(self, article_soup):
+        try:
+            title = article_soup.find('td').a.text
+        except AttributeError:
+            print "Couldn't parse article title."
+            title = ''
+        return title
+
+    def parse_article_uid(self, article_soup):
+        try:
+            href = article_soup.find('td').a.get('href')
+            uid_param = ParseHelper.get_parameter_from_url(href, 'citation_for_view')
+            uid = uid_param.split(':')[-1]
+        except AttributeError:
+            print "Couldn't parse article UID."
+            uid = ''
+        return uid
+
+    def parse_citation_count(self, article_soup):
+        try:
+            citations_count = article_soup.find_all('td')[1].a.text 
+            try:
+                count = int(citations_count)
+            except ValueError:
+                count = 0
+        except AttributeError:
+            print "Couldn't parse citations count."
+            count = ''
+        return count
+
+    def parse_year(self, article_soup):
+        try:
+            year = article_soup.find(class_='gsc_a_h').text
+            try:
+                year = int(year)
+            except ValueError:
+                year = ''
+        except AttributeError:
+            print "Couldn't parse year."
+            year = ''
+        return year
+
+
+
+
+
 
 
 class AuthorPublication(object):
