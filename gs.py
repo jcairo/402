@@ -71,6 +71,23 @@ class ParseHelper(object):
         value = params[key]
         return value[0]
 
+    @staticmethod
+    def exception_wrapper(func):
+        """
+        Wraps any functions which may cause exceptions in an
+        exception handler.
+        """
+        def exception_wrapped_func(self, author_div):
+            try:
+                result = func(self, author_div)
+            except AttributeError, ValueError:
+                class_name = func.__class__
+                function_name = func.__name__
+                print "Parsing error while executing {0}.{1}".format(class_name, function_name)
+                return ''
+            return result
+        return exception_wrapped_func
+
 
 class AuthorQuery(object):
     """
@@ -181,56 +198,41 @@ class AuthorQueryParser(object):
         self.results = parsed_results
         return parsed_results
 
+    @ParseHelper.exception_wrapper
     def parse_uid(self, author_div):
         link_h3 = author_div.find(class_='gsc_1usr_name')
-        try:
-            link_suffix_url = unicode(link_h3.a['href'])
-            uid = ParseHelper.get_parameter_from_url(link_suffix_url, 'user')
-            return uid
-        except AttributeError:
-            print "Couldn't parse author UID."
-            return ''
+        link_suffix_url = link_h3.a['href']
+        uid = ParseHelper.get_parameter_from_url(link_suffix_url, 'user')
+        return uid
 
+    @ParseHelper.exception_wrapper
     def parse_name(self, author_div):
         # name format varies. sometimes the last name is in a span,
         # other times both the first and last are in the same tag.
         name_h3 = author_div.find(class_='gsc_1usr_name')
-        try:
-            name = unicode(name_h3.text)
-            return name
-        except AttributeError:
-            print "Couldn't parse name"
-            return ''
+        name = name_h3.text
+        return name
 
+    @ParseHelper.exception_wrapper
     def parse_author_link(self, author_div):
         link_h3 = author_div.find(class_='gsc_1usr_name')
-        try:
-            link_suffix = unicode(link_h3.a['href'])
-            return GSHelper.BASE_URL + link_suffix
-        except AttributeError:
-            print "Couldn't parse author URL."
-            return ''
+        link_suffix = link_h3.a['href']
+        return GSHelper.BASE_URL + link_suffix
 
+    @ParseHelper.exception_wrapper
     def parse_affiliation(self, author_div):
         affiliation_div = author_div.find(class_='gsc_1usr_aff')
-        try:
-            affiliation = unicode(affiliation_div.text)
-            return affiliation
-        except AttributeError:
-            print "Couldn't parse author affiliation."
-            return ''
+        affiliation = affiliation_div.text
+        return affiliation
 
+    @ParseHelper.exception_wrapper
     def parse_research_areas(self, author_div):
         research_areas_div = author_div.find(class_='gsc_1usr_int')
-        try:
-            research_areas_a = research_areas_div.find_all('a')
-        except AttributeError:
-            print "Couldn't parse research areas."
-            return []
+        research_areas_a = research_areas_div.find_all('a')
         research_areas = []
         for research_area_a in research_areas_a:
             try:
-                research_area = unicode(research_area_a.string)
+                research_area = research_area_a.string
             except AttributeError as e:
                 print e
                 research_area = ''
@@ -238,14 +240,11 @@ class AuthorQueryParser(object):
             research_areas.append(research_area)
         return research_areas
 
+    @ParseHelper.exception_wrapper
     def parse_email_domain(self, author_div):
         email_domain_div = author_div.find(class_='gsc_1usr_emlb')
-        try:
-            email_domain = unicode(email_domain_div.string)
-            return email_domain
-        except AttributeError:
-            print "Couldn't parse author email."
-            return ''
+        email_domain = email_domain_div.string
+        return email_domain
 
 
 class Author(object):
@@ -296,115 +295,80 @@ class AuthorParser(object):
     def get_result(self):
         return self.result
 
+    @ParseHelper.exception_wrapper
     def parse_name(self, soup):
         name_div = soup.find(id='gsc_prf_in')
-        try:
-            name = name_div.text
-            return name
-        except AttributeError:
-            print "Couldn't parse name."
-            return ''
+        name = name_div.text
+        return name
 
+    @ParseHelper.exception_wrapper
     def parse_author_uid(self, soup):
-        try:
-            link_tag = soup.find(attrs={'rel': 'canonical'})
-            url = link_tag.get('href')
-            uid = ParseHelper.get_parameter_from_url(url, 'user')
-            return uid
-        except AttributeError:
-            print "Couldn't parse author UID"
-            return ''
+        link_tag = soup.find(attrs={'rel': 'canonical'})
+        url = link_tag.get('href')
+        uid = ParseHelper.get_parameter_from_url(url, 'user')
+        return uid
 
+    @ParseHelper.exception_wrapper
     def parse_author_bio(self, soup):
-        try:
-            bio_div = soup.find_all(class_='gsc_prf_il')[0]
-            bio = bio_div.text
-            print bio
-            return bio
-        except AttributeError:
-            print "Couldn't parse author bio."
-            return ''
+        bio_div = soup.find_all(class_='gsc_prf_il')[0]
+        bio = bio_div.text
+        return bio
 
+    @ParseHelper.exception_wrapper
     def parse_author_research_interests(self, soup):
-        try:
-            interests_div = soup.find_all(class_='gsc_prf_il')[1]
-            interests = []
-            for a_tag in interests_div.find_all('a'):
-                interests.append(a_tag.text)
-            return interests
-        except AttributeError:
-            print "Couldn't parse interests."
-            return []
+        interests_div = soup.find_all(class_='gsc_prf_il')[1]
+        interests = []
+        for a_tag in interests_div.find_all('a'):
+            interests.append(a_tag.text)
+        return interests
 
+    @ParseHelper.exception_wrapper
     def parse_author_total_citations(self, soup):
-        try:
-            table = soup.find(id='gsc_rsb_st')
-            citations_row = table.find_all('tr')[1]
-            total_citations = citations_row.find_all('td')[1].text
-            return total_citations
-        except AttributeError:
-            print "Couldn't parse total citations."
-            return ''
+        table = soup.find(id='gsc_rsb_st')
+        citations_row = table.find_all('tr')[1]
+        total_citations = citations_row.find_all('td')[1].text
+        return total_citations
 
+    @ParseHelper.exception_wrapper
     def parse_co_authors_page_link(self, soup):
-        try:
-            co_authors_link_tag = soup.find(class_='gsc_rsb_lc')
-            co_authors_link = GSHelper.BASE_URL + co_authors_link_tag.get('href')
-            return co_authors_link
-        except AttributeError:
-            print "Couldn't parse coauthors link."
-            return ''
+        co_authors_link_tag = soup.find(class_='gsc_rsb_lc')
+        co_authors_link = GSHelper.BASE_URL + co_authors_link_tag.get('href')
+        return co_authors_link
 
+    @ParseHelper.exception_wrapper
     def parse_h_index(self, soup):
-        try:
-            table = soup.find(id='gsc_rsb_st')
-            h_index_row = table.find_all('tr')[2]
-            h_index = h_index_row.find_all('td')[1].text
-            return h_index
-        except AttributeError:
-            print "Couldn't parse h-index."
-            return ''
+        table = soup.find(id='gsc_rsb_st')
+        h_index_row = table.find_all('tr')[2]
+        h_index = h_index_row.find_all('td')[1].text
+        return h_index
 
+    @ParseHelper.exception_wrapper
     def parse_i10_index(self, soup):
-        try:
-            table = soup.find(id='gsc_rsb_st')
-            i10_index_row = table.find_all('tr')[3]
-            i10_index = i10_index_row('td')[1].text
-            return i10_index
-        except AttributeError:
-            print "Couldn't parse i10-index."
-            return ''
+        table = soup.find(id='gsc_rsb_st')
+        i10_index_row = table.find_all('tr')[3]
+        i10_index = i10_index_row('td')[1].text
+        return i10_index
 
+    @ParseHelper.exception_wrapper
     def parse_publications_by_year(self, soup):
         pubs_by_year = []
-        try:
-            graph_div = soup.find(id='gsc_g')
-            years_div = graph_div.find(id='gsc_g_x')
-            years = years_div.find_all('span')
-            counts_div = graph_div.find(id='gsc_g_bars')
-            counts = counts_div.find_all('a')
-        except AttributeError:
-            print "Couldn't parse publications by year."
-            return ''
+        graph_div = soup.find(id='gsc_g')
+        years_div = graph_div.find(id='gsc_g_x')
+        years = years_div.find_all('span')
+        counts_div = graph_div.find(id='gsc_g_bars')
+        counts = counts_div.find_all('a')
         for year, count in zip(years, counts):
             result_dict = OrderedDict()
-            try:
-                result_dict['year'] = int(year.text)
-                result_dict['count'] = int(count.text)
-                pubs_by_year.append(result_dict)
-            except AttributeError:
-                print "Couldn't parse publications by year."
-                break
+            result_dict['year'] = int(year.text)
+            result_dict['count'] = int(count.text)
+            pubs_by_year.append(result_dict)
         return pubs_by_year
 
+    @ParseHelper.exception_wrapper
     def parse_author_image_URL(self, soup):
-        try:
-            img_tag = soup.find(id='gsc_prf_pup')
-            image_url = GSHelper.BASE_URL + img_tag['src']
-            return image_url
-        except AttributeError:
-            print "Couldn't parse image URL."
-            return ''
+        img_tag = soup.find(id='gsc_prf_pup')
+        image_url = GSHelper.BASE_URL + img_tag['src']
+        return image_url
 
 
 class AuthorCoAuthors(object):
@@ -446,7 +410,7 @@ class AuthorCoAuthorsParser(object):
             coauthor_div = soup.find(id='gsc_ccl')
             coauthor_divs = coauthor_div.find_all(class_='gs_scl')
         except AttributeError:
-            print "Couldn't find coauthors."
+            print "Couldn't find coauthors div."
             return coauthors
         for coauthor in coauthor_divs:
             coauthor_dict = OrderedDict()
@@ -460,66 +424,45 @@ class AuthorCoAuthorsParser(object):
             coauthors.append(coauthor_dict)
         return coauthors
 
+    @ParseHelper.exception_wrapper
     def parse_author_uid(self, coauthor_soup):
-        try:
-            coauthor_url = coauthor_soup.div.a.get('href')
-            coauthor_uid =  ParseHelper.get_parameter_from_url(coauthor_url, 'user')
-        except AttributeError:
-            print "Couldn't parse coauthor UID."
-            coauthor_uid = ''
+        coauthor_url = coauthor_soup.div.a.get('href')
+        coauthor_uid =  ParseHelper.get_parameter_from_url(coauthor_url, 'user')
         return coauthor_uid
 
+    @ParseHelper.exception_wrapper
     def parse_author_url(self, coauthor_soup):
-        try:
-            coauthor_url = GSHelper.BASE_URL + coauthor_soup.find(class_='gsc_1usr_name').a.get('href')
-            coauthor_url = coauthor_url
-        except AttributeError:
-            print "Couldn't parse coauthor URL."
-            coauthor_url = ''
+        coauthor_url = GSHelper.BASE_URL + coauthor_soup.find(class_='gsc_1usr_name').a.get('href')
+        coauthor_url = coauthor_url
         return coauthor_url
 
+    @ParseHelper.exception_wrapper
     def parse_coauthor_name(self, coauthor_soup):
-        try:
-            coauthor_name = coauthor_soup.find(class_='gsc_1usr_name').text
-        except AttributeError:
-            print "Couldn't parse coauthor name."
-            coauthor_name = ''
+        coauthor_name = coauthor_soup.find(class_='gsc_1usr_name').text
         return coauthor_name
 
+    @ParseHelper.exception_wrapper
     def parse_coauthor_citations(self, coauthor_soup):
-        try:
-            citation_div = coauthor_soup.find(class_='gsc_1usr_cby')
-            citation_count = int(citation_div.text.split()[-1])
-        except AttributeError:
-            print "Couldn't parse coauthor citation count."
-            citation_count = ''
+        citation_div = coauthor_soup.find(class_='gsc_1usr_cby')
+        citation_count = int(citation_div.text.split()[-1])
         return citation_count
 
+    @ParseHelper.exception_wrapper
     def parse_domain(self, coauthor_soup):
-        try:
-            domain_div = coauthor_soup.find(class_='gsc_1usr_emlb')
-            domain = domain_div.text
-        except AttributeError:
-            print "Couldn't parse coauthor domain."
-            domain = ''
+        domain_div = coauthor_soup.find(class_='gsc_1usr_emlb')
+        domain = domain_div.text
         return domain
 
+    @ParseHelper.exception_wrapper
     def parse_bio(self, coauthor_soup):
-        try:
-            bio_div = coauthor_soup.find(class_='gsc_1usr_aff')
-            bio = bio_div.text
-        except AttributeError:
-            print "Couldn't parse coauthor bio."
-            bio = ''
+        bio_div = coauthor_soup.find(class_='gsc_1usr_aff')
+        bio = bio_div.text
         return bio
 
+    @ParseHelper.exception_wrapper
     def parse_image_url(self, coauthor_soup):
-        try:
-            image_relative_url = coauthor_soup.div.a.img.get('src')
-            image_url = GSHelper.BASE_URL + image_relative_url
-        except AttributeError:
-            print "Couldn't parse author image url."
-            image_url = ''
+        image_relative_url = coauthor_soup.div.a.img.get('src')
+        image_url = GSHelper.BASE_URL + image_relative_url
         return image_url
 
 
@@ -576,54 +519,39 @@ class AuthorPublicationsParser(object):
             article_uids.append(article_dict)
         return article_uids
         
+    @ParseHelper.exception_wrapper
     def parse_article_url(self, article_soup):
-        try:
-            article_url = article_soup.find('td').a.get('href')
-            url = GSHelper.BASE_URL + article_url
-        except AttributeError:
-            print "Couldn't parse article url." 
-            url = ''
+        article_url = article_soup.find('td').a.get('href')
+        url = GSHelper.BASE_URL + article_url
         return url
 
+    @ParseHelper.exception_wrapper
     def parse_article_title(self, article_soup):
-        try:
-            title = article_soup.find('td').a.text
-        except AttributeError:
-            print "Couldn't parse article title."
-            title = ''
+        title = article_soup.find('td').a.text
         return title
 
+    @ParseHelper.exception_wrapper
     def parse_article_uid(self, article_soup):
-        try:
-            href = article_soup.find('td').a.get('href')
-            uid_param = ParseHelper.get_parameter_from_url(href, 'citation_for_view')
-            uid = uid_param.split(':')[-1]
-        except AttributeError:
-            print "Couldn't parse article UID."
-            uid = ''
+        href = article_soup.find('td').a.get('href')
+        uid_param = ParseHelper.get_parameter_from_url(href, 'citation_for_view')
+        uid = uid_param.split(':')[-1]
         return uid
 
+    @ParseHelper.exception_wrapper
     def parse_citation_count(self, article_soup):
+        citations_count = article_soup.find_all('td')[1].a.text 
         try:
-            citations_count = article_soup.find_all('td')[1].a.text 
-            try:
-                count = int(citations_count)
-            except ValueError:
-                count = 0
-        except AttributeError:
-            print "Couldn't parse citations count."
-            count = ''
+            count = int(citations_count)
+        except ValueError:
+            count = 0
         return count
 
+    @ParseHelper.exception_wrapper
     def parse_year(self, article_soup):
+        year = article_soup.find(class_='gsc_a_h').text
         try:
-            year = article_soup.find(class_='gsc_a_h').text
-            try:
-                year = int(year)
-            except ValueError:
-                year = ''
-        except AttributeError:
-            print "Couldn't parse year."
+            year = int(year)
+        except ValueError:
             year = ''
         return year
 
@@ -671,81 +599,53 @@ class AuthorPublicationParser(object):
         pub_dict['citations_by_year'] = self.parse_citations_by_year(soup)
         return pub_dict
 
+    @ParseHelper.exception_wrapper
     def parse_publication_url(self, soup):
-        try:
-            link_div = soup.find(id='gsc_title').a.get('href')
-        except AttributeError:
-            print "Couldn't parse publication URL."
-            link_div = ''
+        link_div = soup.find(id='gsc_title').a.get('href')
         return link_div
 
+    @ParseHelper.exception_wrapper
     def parse_authors(self, soup):
-        try:
-            authors_text = soup.find('div', text='Authors').next_sibling.text
-            authors = authors_text.split(',')
-        except AttributeError:
-            print "Couldn't parse publication authors."
-            authors = []
+        authors_text = soup.find('div', text='Authors').next_sibling.text
+        authors = authors_text.split(',')
         return authors
 
+    @ParseHelper.exception_wrapper
     def parse_publication_date(self, soup):
-        try:
-            date = soup.find('div', text='Publication date').next_sibling.text
-        except AttributeError:
-            print "Couldn't parse publication date."
-            date = ''
+        date = soup.find('div', text='Publication date').next_sibling.text
         return date
 
+    @ParseHelper.exception_wrapper
     def parse_journal_name(self, soup):
-        try:
-            journal_name = soup.find('div', text='Journal').next_sibling.text
-        except AttributeError:
-            print "Couldn't parse publication journal name."
-            journal_name = ''
+        journal_name = soup.find('div', text='Journal').next_sibling.text
         return journal_name
 
+    @ParseHelper.exception_wrapper
     def parse_page_range(self, soup):
-        try:
-            page_range = soup.find('div', text='Pages').next_sibling.text
-        except AttributeError:
-            print "Couldn't parse publication page range."
-            page_range = ''
+        page_range = soup.find('div', text='Pages').next_sibling.text
         return page_range
 
+    @ParseHelper.exception_wrapper
     def parse_publisher(self, soup):
-        try:
-            publisher = soup.find('div', text='Publisher').next_sibling.text
-        except AttributeError:
-            print "Couldn't parse publication publisher."
-            publisher = ''
+        publisher = soup.find('div', text='Publisher').next_sibling.text
         return publisher
 
+    @ParseHelper.exception_wrapper
     def parse_abstract(self, soup):
-        try:
-            abstract = soup.find('div', text='Description').next_sibling.text
-        except AttributeError:
-            print "Couldn't parse publication abstract."
-            abstract = ''
+        abstract = soup.find('div', text='Description').next_sibling.text
         return abstract
 
+    @ParseHelper.exception_wrapper
     def parse_citation_count(self, soup):
-        try:
-            count_string = soup.find('div', text='Total citations').next_sibling.div.a.text
-            count = int(count_string.split()[-1])
-        except AttributeError, TypeError:
-            print "Couldn't parse publication citation count."
-            count = ''
+        count_string = soup.find('div', text='Total citations').next_sibling.div.a.text
+        count = int(count_string.split()[-1])
         return count
 
     def parse_citations_by_year(self, soup):
         citations_count = []
-        try:
-            graph = soup.find(id='gsc_graph_bars')
-            years = graph.find_all('span')
-            counts = graph.find_all('a')
-        except AttributeError:
-            print "Couldn't parse publication citations by year."
-            return citations_count
+        graph = soup.find(id='gsc_graph_bars')
+        years = graph.find_all('span')
+        counts = graph.find_all('a')
         for year, count in zip(years, counts):
             result_dict = OrderedDict()
             try:
