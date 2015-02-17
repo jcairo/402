@@ -33,29 +33,29 @@ class GSHelper(object):
     def search_author(author_name, labels=None):
         author_name = sys.argv[2]
         if labels is None:
-            author_query = AuthorQuery(author_name)
+            author_query = AuthorQuery(author_name, AuthorQueryParser)
         else:
-            author_query = AuthorQuery(author_name, labels)
-        return author_query.search_results
+            author_query = AuthorQuery(author_name, AuthorQueryParser, labels)
+        return author_query.get_search_results()
 
     @staticmethod
     def get_author(author_url):
-        author = Author(author_url)
+        author = Author(author_url, AuthorParser)
         return author.get_author_info()
 
     @staticmethod
     def get_publications(author_uid, page):
-        author_pubs = AuthorPublications(author_uid, page)
+        author_pubs = AuthorPublications(author_uid, page, AuthorPublicationsParser)
         return author_pubs.get_pubs_info()
 
     @staticmethod
     def get_publication(author_uid, publication_uid):
-        author_pub = AuthorPublication(author_uid, publication_uid)
+        author_pub = AuthorPublication(author_uid, publication_uid, AuthorPublicationParser)
         return author_pub.get_pub_info()
 
     @staticmethod
     def get_coauthors(author_uid):
-        author_coauthors = AuthorCoAuthors(author_uid)
+        author_coauthors = AuthorCoAuthors(author_uid, AuthorCoAuthorsParser)
         return author_coauthors.get_coauthors_info()
 
 
@@ -99,9 +99,15 @@ class AuthorQuery(object):
     >>> search_results.get_num_hits()
     '3'
     """
-    def __init__(self, author_name, author_description=None, labels=None):
-        self.query_URL = self.get_url(author_name, author_description, labels)
-        self.search(self.query_URL)
+    def __init__(self, author_name, author_query_parser, author_description=None, labels=None):
+        self.query_url = self.get_url(author_name, author_description, labels)
+        html = GSHelper.get_url(self.query_url)
+        self.query_dict = OrderedDict()
+        self.query_dict['author_search_name'] = author_name
+        self.query_dict['author_search_description'] = author_description
+        self.query_dict['author_search_labels'] = labels
+        query_resp_parser = author_query_parser(html, self.query_dict)
+        self.search_results = query_resp_parser.get_results() 
 
     def format_labels(self, labels):
         """
@@ -129,25 +135,13 @@ class AuthorQuery(object):
         query_URL = GSHelper.BASE_URL + GSHelper.CITATIONS_URL_EXTENSION + urlencode(query_dict)
         return query_URL
 
-    def search(self, url=None):
-        """
-        Return an array of authors found in the search
-        """
-        html = GSHelper.get_url(url)
-        query_resp_parser = AuthorQueryParser(html)
-        self.search_results = query_resp_parser.get_results()
+    def get_search_results(self):
         return self.search_results
 
     def get_first_result_url(self):
-        """
-        Return the URL of the first search results
-        """
         return self.get_nth_result_url(0)
 
     def get_nth_result_url(self, index):
-        """
-        Return the URL of the nth search result
-        """
         return self.search_results[index]['scholar_page']
 
     def get_num_hits(self):
@@ -165,14 +159,14 @@ class AuthorQueryParser(object):
     Parses the html payload of an author query.
     Returns an OrderedDict of authors found.
     """
-    def __init__(self, payload):
+    def __init__(self, payload, query_dict):
         soup = BeautifulSoup(payload, 'lxml')
-        self.results = self.parse(soup)
+        query_dict['search_results'] = self.parse(soup, query_dict)
 
     def get_results(self):
         return self.results
 
-    def parse(self, soup):
+    def parse(self, soup, query_dict):
         parsed_results = []
         author_divs = soup.find_all(class_='gsc_1usr')
         for author_div in author_divs:
@@ -184,16 +178,15 @@ class AuthorQueryParser(object):
             author['email_domain'] = self.parse_email_domain(author_div)
             author['uid'] = self.parse_uid(author_div)
             parsed_results.append(author)
+        self.results = parsed_results
         return parsed_results
 
     def parse_uid(self, author_div):
         link_h3 = author_div.find(class_='gsc_1usr_name')
         try:
-            link_suffix = unicode(link_h3.a['href'])
-            url_components = urlparse(link_suffix)
-            params = parse_qs(url_components.query)
-            uid = params['user']
-            return uid[0]
+            link_suffix_url = unicode(link_h3.a['href'])
+            uid = ParseHelper.get_parameter_from_url(link_suffix_url, 'user')
+            return uid
         except AttributeError:
             print "Couldn't parse author UID."
             return ''
@@ -261,11 +254,11 @@ class Author(object):
     Pass in an author page url on GS.
     Get parsed information by calling Author.get_author_info()
     """
-    def __init__(self, author_uid):
+    def __init__(self, author_uid, author_parser):
         self.author_dict = OrderedDict()
         self.author_url = self.get_author_url(author_uid)
         author_html = GSHelper.get_url(self.author_url)
-        self.author_parser = AuthorParser(author_html, self.author_dict)
+        self.author_parser = author_parser(author_html, self.author_dict)
 
     def get_author_info(self):
         return self.author_dict
@@ -315,10 +308,8 @@ class AuthorParser(object):
     def parse_author_uid(self, soup):
         try:
             link_tag = soup.find(attrs={'rel': 'canonical'})
-            href = link_tag.get('href')
-            url_components = urlparse(href)
-            params = parse_qs(url_components.query)
-            uid = params['user'][0]
+            url = link_tag.get('href')
+            uid = ParseHelper.get_parameter_from_url(url, 'user')
             return uid
         except AttributeError:
             print "Couldn't parse author UID"
@@ -417,12 +408,12 @@ class AuthorParser(object):
 
 
 class AuthorCoAuthors(object):
-    def __init__(self, author_uid):
+    def __init__(self, author_uid, author_coauthors_parser):
         self.coauthors_dict = OrderedDict()
         self.coauthors_dict['author_uid'] = author_uid
         query_url = self.get_page_url(author_uid)
         html = GSHelper.get_url(query_url)
-        self.coauthor_parser = AuthorCoAuthorsParser(html, self.coauthors_dict)
+        self.coauthor_parser = author_coauthors_parser(html, self.coauthors_dict)
 
     def get_page_url(self, author_uid):
         url = GSHelper.BASE_URL + GSHelper.CITATIONS_URL_EXTENSION
@@ -533,13 +524,13 @@ class AuthorCoAuthorsParser(object):
 
 
 class AuthorPublications(object):
-    def __init__(self, author_uid, page):
+    def __init__(self, author_uid, page, author_publications_parser):
         self.pubs_dict = OrderedDict()
         self.pubs_dict['author_uid'] = author_uid
         self.pubs_dict['page'] = page
         query_url = self.get_page_url(author_uid, page)
         html = GSHelper.get_url(query_url)
-        self.author_pubs_parser = AuthorPublicationsParser(html, self.pubs_dict)
+        self.author_pubs_parser = author_publications_parser(html, self.pubs_dict)
 
     def get_pubs_info(self):
         return self.pubs_dict
@@ -638,13 +629,13 @@ class AuthorPublicationsParser(object):
 
 
 class AuthorPublication(object):
-    def __init__(self, author_uid, publication_uid):
+    def __init__(self, author_uid, publication_uid, author_publication_parser):
         self.pub_dict = OrderedDict()
         self.pub_dict['author_uid'] = author_uid
-        self.pub_dict['publication_uid'] = author_uid
+        self.pub_dict['publication_uid'] = publication_uid
         query_url = self.get_page_url(author_uid, publication_uid)
         html = GSHelper.get_url(query_url)
-        self.author_pub_parser = AuthorPublicationParser(html, self.pub_dict)
+        self.author_pub_parser = author_publication_parser(html, self.pub_dict)
 
     def get_pub_info(self):
         return self.pub_dict

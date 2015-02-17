@@ -14,18 +14,18 @@ class TestAuthorQuery:
 
     def test_author_query_no_description(self):
         test_url = "https://scholar.google.ca/citations?mauthors=Victor+Guana&hl=en&view_op=search_authors"
-        query = gs.AuthorQuery('Victor Guana')
-        assert query.query_URL == test_url
+        query = gs.AuthorQuery('Victor Guana', gs.AuthorQueryParser)
+        assert query.query_url == test_url
 
     def test_author_query_with_description(self):
         test_url = "https://scholar.google.ca/citations?mauthors=Victor+Guana+ualberta&hl=en&view_op=search_authors"
-        query = gs.AuthorQuery('Victor Guana', author_description='ualberta')
-        assert query.query_URL == test_url
+        query = gs.AuthorQuery('Victor Guana', gs.AuthorQueryParser, author_description='ualberta')
+        assert query.query_url == test_url
 
     def test_author_query_with_description_and_labels(self):
         test_url = 'https://scholar.google.ca/citations?mauthors=Victor+Guana+ualberta+label%3AModel_Driven_Development+label%3ACode_Generation&hl=en&view_op=search_authors'
-        query = gs.AuthorQuery('Victor Guana', author_description='ualberta', labels=['Model Driven Development', 'Code Generation'])
-        assert query.query_URL == test_url
+        query = gs.AuthorQuery('Victor Guana', gs.AuthorQueryParser, author_description='ualberta', labels=['Model Driven Development', 'Code Generation'])
+        assert query.query_url == test_url
 
 
 class TestAuthorQueryParser:
@@ -35,7 +35,9 @@ class TestAuthorQueryParser:
     @classmethod
     def setup_class(cls):
         cls.html_file = open('test_data/einstein_search.html', 'r')
-        cls.author_query_results = gs.AuthorQueryParser(cls.html_file).get_results()
+        cls.query_dict = OrderedDict()
+        cls.author_query_parser = gs.AuthorQueryParser(cls.html_file, cls.query_dict)
+        cls.author_query_results = cls.author_query_parser.get_results()
 
     @classmethod
     def teardown_class(cls):
