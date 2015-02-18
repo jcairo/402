@@ -6,12 +6,12 @@ from collections import OrderedDict
 import requests
 import json
 import sys
-import re
+import time
 
 
 class GSHelper(object):
     """
-    Settings for GS
+    Helper methods and constants for the GS module.
     """
 
     BASE_URL = 'https://scholar.google.ca'
@@ -30,7 +30,7 @@ class GSHelper(object):
         return response.text
 
     @staticmethod
-    def search_author(author_name, labels=None):
+    def search_author(author_name, description=None, labels=None):
         author_name = sys.argv[2]
         if labels is None:
             author_query = AuthorQuery(author_name, AuthorQueryParser)
@@ -87,6 +87,17 @@ class ParseHelper(object):
                 return ''
             return result
         return exception_wrapped_func
+
+    @staticmethod
+    def timeit(func):
+        def timed_func(self, soup):
+            start = time.clock()
+            result = func(self, soup)
+            end = time.clock()
+            print end - start
+            return result
+        return timed_func
+
 
 
 class AuthorQuery(object):
@@ -270,6 +281,9 @@ class Author(object):
         query_dict['user'] = author_uid
         query_dict['hl'] = 'en'
         return GSHelper.BASE_URL + GSHelper.CITATIONS_URL_EXTENSION + urlencode(query_dict)
+
+    def to_json(self):
+        return json.dumps(self.author_dict, indent=4)
 
 
 class AuthorParser(object):
