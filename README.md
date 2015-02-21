@@ -48,7 +48,7 @@ Get an authors coauthors
 $ ./gs.py --coauthors 'Q0ZsJ_UAAAAJ'
 ```
 
-Get an authors publications, last arg indicates page
+Get an authors publications, last arg indicates page. Each page has 100 results.
 ```
 $ ./gs.py --publications 'Q0ZsJ_UAAAAJ' 0
 ```
