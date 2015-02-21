@@ -306,7 +306,6 @@ class TestAuthorPublicationParser:
         assert self.pub_result['publication_url'] == 'http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=712192'
     
     def test_publication_authors(self):
-        print self.pub_result['authors']
         assert self.pub_result['authors'] == ['Richard S Sutton', 'Andrew G Barto']
 
     def test_publication_date(self):
