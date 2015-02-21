@@ -101,7 +101,7 @@ class TestAuthorParser:
         cls.html_file = open('test_data/sutton_home_page.html', 'r')
         cls.author_dict = OrderedDict()
         cls.author_parser = gs.AuthorParser(cls.html_file, cls.author_dict)
-        cls.author_result = cls.author_parser.get_result()
+        cls.author_result = cls.author_parser.get_results()
 
     @classmethod
     def teardown_class(cls):
@@ -164,7 +164,7 @@ class TestAuthorPublicationsParser:
         cls.html_file = open('test_data/sutton_home_page.html', 'r')
         cls.pubs_dict = OrderedDict()
         cls.publications_parser = gs.AuthorPublicationsParser(cls.html_file, cls.pubs_dict)
-        cls.pubs_result = cls.publications_parser.get_result()
+        cls.pubs_result = cls.publications_parser.get_results()
 
     @classmethod
     def teardown_class(cls):
@@ -213,7 +213,7 @@ class TestAuthorCoAuthorsParser:
         cls.html_file = open('test_data/sutton_coauthors_page.html', 'r')
         cls.coauthors_dict = OrderedDict()
         cls.coauthors_parser = gs.AuthorCoAuthorsParser(cls.html_file, cls.coauthors_dict)
-        cls.coauthors_result = cls.coauthors_parser.get_result() 
+        cls.coauthors_result = cls.coauthors_parser.get_results()
 
     @classmethod
     def teardown_class(cls):
@@ -226,16 +226,16 @@ class TestAuthorCoAuthorsParser:
         assert self.coauthors_result['coauthors'][0]['name'] == 'Doina Precup'
 
     def test_parse_first_coauthor_uid(self):
-        assert self.coauthors_result['coauthors'][0]['author_uid'] == 'j54VcVEAAAAJ' 
+        assert self.coauthors_result['coauthors'][0]['author_uid'] == 'j54VcVEAAAAJ'
 
     def test_parse_first_coauthor_url(self):
-        assert self.coauthors_result['coauthors'][0]['author_url'] == 'https://scholar.google.ca/citations?user=j54VcVEAAAAJ&hl=en' 
+        assert self.coauthors_result['coauthors'][0]['author_url'] == 'https://scholar.google.ca/citations?user=j54VcVEAAAAJ&hl=en'
 
     def test_parse_first_coauthor_citation_count(self):
         assert self.coauthors_result['coauthors'][0]['citation_count'] == 3960
 
     def test_parse_first_coauthor_domain(self):
-        assert self.coauthors_result['coauthors'][0]['domain'] == '@cs.mcgill.ca' 
+        assert self.coauthors_result['coauthors'][0]['domain'] == '@cs.mcgill.ca'
 
     def test_parse_first_coauthor_bio(self):
         assert self.coauthors_result['coauthors'][0]['bio'] == 'McGill University'
@@ -247,21 +247,21 @@ class TestAuthorCoAuthorsParser:
         assert self.coauthors_result['coauthors'][1]['name'] == 'Satinder Singh'
 
     def test_parse_second_coauthor_uid(self):
-        assert self.coauthors_result['coauthors'][1]['author_uid'] == 'q92q8SMAAAAJ' 
+        assert self.coauthors_result['coauthors'][1]['author_uid'] == 'q92q8SMAAAAJ'
 
-    def test_parse_second_coauthor_url(self): 
-        assert self.coauthors_result['coauthors'][1]['author_url'] == 'https://scholar.google.ca/citations?user=q92q8SMAAAAJ&hl=en' 
+    def test_parse_second_coauthor_url(self):
+        assert self.coauthors_result['coauthors'][1]['author_url'] == 'https://scholar.google.ca/citations?user=q92q8SMAAAAJ&hl=en'
 
-    def test_parse_second_coauthor_citation_count(self): 
+    def test_parse_second_coauthor_citation_count(self):
         assert self.coauthors_result['coauthors'][1]['citation_count'] == 17853
 
     def test_parse_second_coauthor_domain(self):
-        assert self.coauthors_result['coauthors'][1]['domain'] == '@umich.edu' 
+        assert self.coauthors_result['coauthors'][1]['domain'] == '@umich.edu'
 
     def test_parse_second_coauthor_bio(self):
         assert self.coauthors_result['coauthors'][1]['bio'] == 'Professor, Computer Science & Engineering, University of Michigan'
 
-    def test_parse_second_coauthor_image_url(self):    
+    def test_parse_second_coauthor_image_url(self):
         assert self.coauthors_result['coauthors'][1]['author_image_url'] == 'https://scholar.google.ca/citations?view_op=view_photo&user=q92q8SMAAAAJ&citpid=1'
 
 
@@ -275,7 +275,7 @@ class TestAuthorPublicationParser:
         cls.html_file = open('test_data/sutton_publication.html', 'r')
         cls.pub_dict = OrderedDict()
         cls.publication_parser = gs.AuthorPublicationParser(cls.html_file, cls.pub_dict)
-        cls.pub_result = cls.publication_parser.get_result()
+        cls.pub_result = cls.publication_parser.get_results()
 
     @classmethod
     def teardown_class(cls):
@@ -301,11 +301,11 @@ class TestAuthorPublicationParser:
 
     def test_publication_partial_abstract(self):
         self.pub_result['partial_abstract'] == """
-                            This is one of the first books in the new adaptive computation and machine learning series. 
-                            The goal of this book is to provide a simple account of the key ideas of reinforcement 
-                            learning: a learning system that adapts its behavior in order to maximize a special signal 
-                            from its environment. The treatment of the subject takes the point of view of artificial 
-                            intelligence and engineering but without the rigorous formal mathematical treatment which 
+                            This is one of the first books in the new adaptive computation and machine learning series.
+                            The goal of this book is to provide a simple account of the key ideas of reinforcement
+                            learning: a learning system that adapts its behavior in order to maximize a special signal
+                            from its environment. The treatment of the subject takes the point of view of artificial
+                            intelligence and engineering but without the rigorous formal mathematical treatment which
                             can distract from the simplicity of the underlying ideas. The book may be used as ...
                             """
 
