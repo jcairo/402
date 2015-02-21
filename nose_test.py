@@ -303,38 +303,32 @@ class TestAuthorPublicationParser:
         cls.html_file.close()
 
     def test_publication_url(self):
-        self.pub_result['publication_url'] == 'https://scholar.google.ca/citations?view_op=view_citation&hl=en&user=hNTyptAAAAAJ&pagesize=100&citation_for_view=hNTyptAAAAAJ:u5HHmVD_uO8C'
-
+        assert self.pub_result['publication_url'] == 'http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=712192'
+    
     def test_publication_authors(self):
-        self.pub_result['authors'] == ['Richard S Sutton', 'Andrew G Barto']
+        print self.pub_result['authors']
+        assert self.pub_result['authors'] == ['Richard S Sutton', 'Andrew G Barto']
 
     def test_publication_date(self):
-        self.pub_result['publication_date'] == '1998/3/1'
+        assert self.pub_result['publication_date'] == '1998/3/1'
 
     def test_publication_journal_name(self):
-        self.pub_result['journal_name'] == ''
+        assert self.pub_result['journal_name'] == ''
 
     def test_publication_page_range(self):
-        self.pub_result['page_range'] == ''
+        assert self.pub_result['page_range'] == ''
 
     def test_publication_publisher(self):
-        self.pub_result['publisher'] == 'MIT press'
+        assert self.pub_result['publisher'] == 'MIT press'
 
     def test_publication_partial_abstract(self):
-        self.pub_result['partial_abstract'] == """
-                            This is one of the first books in the new adaptive computation and machine learning series.
-                            The goal of this book is to provide a simple account of the key ideas of reinforcement
-                            learning: a learning system that adapts its behavior in order to maximize a special signal
-                            from its environment. The treatment of the subject takes the point of view of artificial
-                            intelligence and engineering but without the rigorous formal mathematical treatment which
-                            can distract from the simplicity of the underlying ideas. The book may be used as ...
-                            """
+        assert self.pub_result['partial_abstract'] == """This is one of the first books in the new adaptive computation and machine learning series. The goal of this book is to provide a simple account of the key ideas of reinforcement learning: a learning system that adapts its behavior in order to maximize a special signal from its environment. The treatment of the subject takes the point of view of artificial intelligence and engineering but without the rigorous formal mathematical treatment which can distract from the simplicity of the underlying ideas. The book may be used as  ..."""
 
     def test_publication_citation_count(self):
-        self.pub_result['citation_count'] == 19597
+        assert self.pub_result['citation_count'] == 19597
 
     def test_citation_count_by_year(self):
-        self.pub_result['citations_by_year'] == [
+        assert self.pub_result['citations_by_year'] == [
                             {'year': 1998, 'count': 74},
                             {'year': 1999, 'count': 205},
                             {'year': 2000, 'count': 309},

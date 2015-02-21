@@ -610,7 +610,7 @@ class AuthorPublicationParser(Parser):
     @ParseHelper.exception_wrapper
     def parse_authors(self, soup):
         authors_text = soup.find('div', text='Authors').next_sibling.text
-        authors = authors_text.split(',')
+        authors = [author.strip() for author in authors_text.split(',')]
         return authors
 
     @ParseHelper.exception_wrapper
