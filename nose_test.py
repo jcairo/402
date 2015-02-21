@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 from collections import OrderedDict
 from nose.tools import set_trace
 
+
 class TestAuthorQuery:
     """
     Testing for AuthorQuery.
@@ -25,6 +26,11 @@ class TestAuthorQuery:
     def test_author_query_with_description_and_labels(self):
         test_url = 'https://scholar.google.ca/citations?mauthors=Victor+Guana+ualberta+label%3AModel_Driven_Development+label%3ACode_Generation&hl=en&view_op=search_authors'
         query = gs.AuthorQuery('Victor Guana', gs.AuthorQueryParser, author_description='ualberta', labels=['Model Driven Development', 'Code Generation'])
+        assert query.query_url == test_url
+
+    def test_author_query_with_no_descriptions_and_labels(self):
+        test_url = 'https://scholar.google.ca/citations?mauthors=Guana+label%3Acode_generation+label%3Amodel_driven_development&hl=en&view_op=search_authors'
+        query = gs.AuthorQuery('Guana', gs.AuthorQueryParser, labels=['code generation', 'model driven development'])
         assert query.query_url == test_url
 
 
@@ -92,6 +98,10 @@ class TestAuthorQueryParser:
         assert self.author_query_results[2]['email_domain'] == '@einstein.yu.edu'
 
 
+class TestAuthor:
+    pass
+
+
 class TestAuthorParser:
     """
     Testing for AuthorParser.
@@ -155,6 +165,10 @@ class TestAuthorParser:
         assert self.author_result['author_image_URL'] == url
 
 
+class TestAuthorPublications:
+    pass
+
+
 class TestAuthorPublicationsParser:
     """
     Testing for Author Publications Parser
@@ -202,6 +216,10 @@ class TestAuthorPublicationsParser:
 
     def test_parse_100th_article_url(self):
         assert self.pubs_result['publications'][99]['url'] == 'https://scholar.google.ca/citations?view_op=view_citation&hl=en&user=hNTyptAAAAAJ&pagesize=100&citation_for_view=hNTyptAAAAAJ:bnK-pcrLprsC'
+
+
+class TestCoAuthors:
+    pass
 
 
 class TestAuthorCoAuthorsParser:
@@ -264,6 +282,9 @@ class TestAuthorCoAuthorsParser:
     def test_parse_second_coauthor_image_url(self):
         assert self.coauthors_result['coauthors'][1]['author_image_url'] == 'https://scholar.google.ca/citations?view_op=view_photo&user=q92q8SMAAAAJ&citpid=1'
 
+
+class TestAuthorPublication:
+    pass
 
 
 class TestAuthorPublicationParser:
