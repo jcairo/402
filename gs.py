@@ -648,19 +648,31 @@ class AuthorPublicationParser(Parser):
     def parse_citations_by_year(self, soup):
         citations_count = []
         graph = soup.find(id='gsc_graph_bars')
-        years = graph.find_all('span')
         counts = graph.find_all('a')
-        for year, count in zip(years, counts):
+        for count in counts:
             result_dict = OrderedDict()
             try:
-                result_dict['year'] = int(year.text)
+                href = count.get('href')
+                year = ParseHelper.get_parameter_from_url(href, 'as_yhi')
+                result_dict['year'] = int(year)
                 result_dict['count'] = int(count.text)
                 citations_count.append(result_dict)
             except AttributeError, TypeError:
                 print "Couldn't parse publication citation by year."
                 break
+        self.fill_empty_years(citations_count)
         return citations_count
 
+    def fill_empty_years(self, citations_list):
+        for idx, citation in enumerate(citations_list):
+            try:
+                if citation['year'] + 1 != citations_list[idx + 1]['year']:
+                    empty_year = OrderedDict()
+                    empty_year['year'] = citation['year'] + 1
+                    empty_year['count'] = 0
+                    citations_list.insert(idx + 1, empty_year)
+            except IndexError:
+                pass
 
 if __name__ == '__main__':
     if sys.argv[1] == '--search':

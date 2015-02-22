@@ -107,7 +107,7 @@ class TestAuthor:
     @classmethod
     def setup_class(cls):
         cls.test_url = 'https://scholar.google.ca/citations?user=Q0ZsJ_UAAAAJ&hl=en'
-    
+
     def test_get_url(self):
         author_uid = 'Q0ZsJ_UAAAAJ'
         query = gs.Author(author_uid,gs.AuthorParser)
@@ -185,7 +185,7 @@ class TestAuthorPublications:
     @classmethod
     def setup_class(cls):
         cls.test_url = 'https://scholar.google.ca/citations?user=Q0ZsJ_UAAAAJ&hl=en&cstart=0&pagesize=100'
-    
+
     def test_get_url(self):
         author_uid = 'Q0ZsJ_UAAAAJ'
         page_offset = 0
@@ -249,7 +249,7 @@ class TestCoAuthors:
     @classmethod
     def setup_class(cls):
         cls.test_url = 'https://scholar.google.ca/citations?view_op=list_colleagues&hl=en&user=Q0ZsJ_UAAAAJ'
-    
+
     def test_get_url(self):
         author_uid = 'Q0ZsJ_UAAAAJ'
         query = gs.AuthorCoAuthors(author_uid,gs.AuthorCoAuthorsParser)
@@ -324,7 +324,7 @@ class TestAuthorPublication:
     @classmethod
     def setup_class(cls):
         cls.test_url = 'https://scholar.google.ca/citations?view_op=view_citation&hl=en&user=ecFsBp0AAAAJ&citation_for_view=ecFsBp0AAAAJ:u5HHmVD_uO8C'
-    
+
     def test_get_url(self):
         author_uid = 'ecFsBp0AAAAJ'
         publication_uid = 'u5HHmVD_uO8C'
@@ -349,7 +349,7 @@ class TestAuthorPublicationParser:
 
     def test_publication_url(self):
         assert self.pub_result['publication_url'] == 'http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=712192'
-    
+
     def test_publication_authors(self):
         assert self.pub_result['authors'] == ['Richard S Sutton', 'Andrew G Barto']
 
@@ -404,34 +404,35 @@ class TestAuthorPublicationParserMissingYears:
         cls.publication_parser = gs.AuthorPublicationParser(cls.html_file, cls.pub_dict)
         cls.pub_result = cls.publication_parser.get_results()
     def test_citation_count_by_year(self):
+        print self.pub_result['citations_by_year']
         assert self.pub_result['citations_by_year'] == [
-                                                        {'year': 1988, 'count': 9},
-                                                        {'year': 1989, 'count': 10},
-                                                        {'year': 1990, 'count': 14},
-                                                        {'year': 1991, 'count': 11},
-                                                        {'year': 1992, 'count': 13},
-                                                        {'year': 1993, 'count': 4},
-                                                        {'year': 1994, 'count': 7},
-                                                        {'year': 1995, 'count': 9},
-                                                        {'year': 1996, 'count': 5},
-                                                        {'year': 1997, 'count': 2},
-                                                        {'year': 1998, 'count': 4},
-                                                        {'year': 1999, 'count': 2},
-                                                        {'year': 2000, 'count': 5},
-                                                        {'year': 2001, 'count': 2},
-                                                        {'year': 2002, 'count': 4},
-                                                        {'year': 2003, 'count': 2},
-                                                        {'year': 2004, 'count': 3},
-                                                        {'year': 2005, 'count': 2},
-                                                        {'year': 2006, 'count': 0},
-                                                        {'year': 2007, 'count': 1},
-                                                        {'year': 2008, 'count': 1},
-                                                        {'year': 2009, 'count': 2},
-                                                        {'year': 2010, 'count': 2},
-                                                        {'year': 2011, 'count': 6},
-                                                        {'year': 2012, 'count': 0},
-                                                        {'year': 2013, 'count': 3},
-                                                        {'year': 2014, 'count': 4},
-                                                        {'year': 2015, 'count': 1}
-                                                        ]
+                            {'year': 1988, 'count': 9},
+                            {'year': 1989, 'count': 10},
+                            {'year': 1990, 'count': 14},
+                            {'year': 1991, 'count': 11},
+                            {'year': 1992, 'count': 13},
+                            {'year': 1993, 'count': 4},
+                            {'year': 1994, 'count': 7},
+                            {'year': 1995, 'count': 9},
+                            {'year': 1996, 'count': 5},
+                            {'year': 1997, 'count': 2},
+                            {'year': 1998, 'count': 4},
+                            {'year': 1999, 'count': 2},
+                            {'year': 2000, 'count': 5},
+                            {'year': 2001, 'count': 2},
+                            {'year': 2002, 'count': 4},
+                            {'year': 2003, 'count': 2},
+                            {'year': 2004, 'count': 3},
+                            {'year': 2005, 'count': 2},
+                            {'year': 2006, 'count': 0},
+                            {'year': 2007, 'count': 1},
+                            {'year': 2008, 'count': 1},
+                            {'year': 2009, 'count': 2},
+                            {'year': 2010, 'count': 2},
+                            {'year': 2011, 'count': 6},
+                            {'year': 2012, 'count': 0},
+                            {'year': 2013, 'count': 3},
+                            {'year': 2014, 'count': 4},
+                            {'year': 2015, 'count': 1}
+                            ]
 
