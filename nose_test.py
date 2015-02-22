@@ -99,7 +99,19 @@ class TestAuthorQueryParser:
 
 
 class TestAuthor:
-    pass
+    """
+    Tests for Author class.
+    Ensure object construction is done correctly,
+    and results are as expected.
+    """
+    @classmethod
+    def setup_class(cls):
+        cls.html_file = open('test_data/testfile.html', 'r')
+        cls.author = gs.Author('V Guana')
+
+    @classmethod
+    def tear_down(cls):
+        cls.html_file.close()
 
 
 class TestAuthorParser:
