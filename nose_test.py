@@ -348,4 +348,45 @@ class TestAuthorPublicationParser:
                             {'year': 2015, 'count': 167}
                             ]
 
+class TestAuthorPublicationParserMissingYears:
+    """
+    Testing for Author Publication Parser missing years case
+    """
+    @classmethod
+    def setup_class(cls):
+        cls.html_file = open('test_data/publication_certain_years_missing.html', 'r')
+        cls.pub_dict = OrderedDict()
+        cls.publication_parser = gs.AuthorPublicationParser(cls.html_file, cls.pub_dict)
+        cls.pub_result = cls.publication_parser.get_results()
+    def test_citation_count_by_year(self):
+        assert self.pub_result['citations_by_year'] == [
+                                                        {'year': 1988, 'count': 9},
+                                                        {'year': 1989, 'count': 10},
+                                                        {'year': 1990, 'count': 14},
+                                                        {'year': 1991, 'count': 11},
+                                                        {'year': 1992, 'count': 13},
+                                                        {'year': 1993, 'count': 4},
+                                                        {'year': 1994, 'count': 7},
+                                                        {'year': 1995, 'count': 9},
+                                                        {'year': 1996, 'count': 5},
+                                                        {'year': 1997, 'count': 2},
+                                                        {'year': 1998, 'count': 4},
+                                                        {'year': 1999, 'count': 2},
+                                                        {'year': 2000, 'count': 5},
+                                                        {'year': 2001, 'count': 2},
+                                                        {'year': 2002, 'count': 4},
+                                                        {'year': 2003, 'count': 2},
+                                                        {'year': 2004, 'count': 3},
+                                                        {'year': 2005, 'count': 2},
+                                                        {'year': 2006, 'count': 0},
+                                                        {'year': 2007, 'count': 1},
+                                                        {'year': 2008, 'count': 1},
+                                                        {'year': 2009, 'count': 2},
+                                                        {'year': 2010, 'count': 2},
+                                                        {'year': 2011, 'count': 6},
+                                                        {'year': 2012, 'count': 0},
+                                                        {'year': 2013, 'count': 3},
+                                                        {'year': 2014, 'count': 4},
+                                                        {'year': 2015, 'count': 1}
+                                                        ]
 
