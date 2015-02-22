@@ -3,7 +3,7 @@ import gs
 from bs4 import BeautifulSoup
 from collections import OrderedDict
 from nose.tools import set_trace
-
+from urllib import unquote
 
 class TestAuthorQuery:
     """
@@ -99,7 +99,14 @@ class TestAuthorQueryParser:
 
 
 class TestAuthor:
-    pass
+    @classmethod
+    def setup_class(cls):
+        cls.test_url = 'https://scholar.google.ca/citations?user=Q0ZsJ_UAAAAJ&hl=en'
+    
+    def test_get_url(self):
+        author_uid = 'Q0ZsJ_UAAAAJ'
+        query = gs.Author(author_uid,gs.AuthorParser)
+        assert unquote(query.get_author_url(author_uid)) == self.test_url
 
 
 class TestAuthorParser:
@@ -166,7 +173,15 @@ class TestAuthorParser:
 
 
 class TestAuthorPublications:
-    pass
+    @classmethod
+    def setup_class(cls):
+        cls.test_url = 'https://scholar.google.ca/citations?user=Q0ZsJ_UAAAAJ&hl=en&cstart=0&pagesize=100'
+    
+    def test_get_url(self):
+        author_uid = 'Q0ZsJ_UAAAAJ'
+        page_offset = 0
+        query = gs.AuthorPublications(author_uid,page_offset,gs.AuthorPublicationsParser)
+        assert unquote(query.get_page_url(author_uid,page_offset)) == self.test_url
 
 
 class TestAuthorPublicationsParser:
@@ -219,7 +234,17 @@ class TestAuthorPublicationsParser:
 
 
 class TestCoAuthors:
-    pass
+    """
+    Testing for CoAuthor object
+    """
+    @classmethod
+    def setup_class(cls):
+        cls.test_url = 'https://scholar.google.ca/citations?view_op=list_colleagues&hl=en&user=Q0ZsJ_UAAAAJ'
+    
+    def test_get_url(self):
+        author_uid = 'Q0ZsJ_UAAAAJ'
+        query = gs.AuthorCoAuthors(author_uid,gs.AuthorCoAuthorsParser)
+        assert unquote(query.get_page_url(author_uid)) == self.test_url
 
 
 class TestAuthorCoAuthorsParser:
@@ -284,7 +309,18 @@ class TestAuthorCoAuthorsParser:
 
 
 class TestAuthorPublication:
-    pass
+    """
+    Testing for Author Publication object
+    """
+    @classmethod
+    def setup_class(cls):
+        cls.test_url = 'https://scholar.google.ca/citations?view_op=view_citation&hl=en&user=ecFsBp0AAAAJ&citation_for_view=ecFsBp0AAAAJ:u5HHmVD_uO8C'
+    
+    def test_get_url(self):
+        author_uid = 'ecFsBp0AAAAJ'
+        publication_uid = 'u5HHmVD_uO8C'
+        query = gs.AuthorPublication(author_uid,publication_uid,gs.AuthorPublicationParser)
+        assert unquote(query.get_page_url(author_uid, publication_uid)) == self.test_url
 
 
 class TestAuthorPublicationParser:
